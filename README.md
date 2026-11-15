@@ -57,6 +57,8 @@ https://games.jdunne.au/api/room/<code>/history
 
 The latest 200 games per room are kept.
 
+The current board of a room can be read (not changed) at `https://games.jdunne.au/api/room/<code>/state`.
+
 ## Run locally
 
 ```

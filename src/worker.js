@@ -1,13 +1,14 @@
 // games.jdunne.au — static pages plus one Durable Object per backgammon room.
 // /api/room/<code>/ws  → WebSocket into that room
 // /api/room/<code>/history → JSON list of finished games in that room
+// /api/room/<code>/state   → the current board, read-only (for checking a room from outside)
 
 const CODE = /^[a-z0-9-]{3,40}$/;
 
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    const m = url.pathname.match(/^\/api\/room\/([^/]+)\/(ws|history)$/);
+    const m = url.pathname.match(/^\/api\/room\/([^/]+)\/(ws|history|state)$/);
     if (m) {
       const code = m[1].toLowerCase();
       if (!CODE.test(code)) return new Response("Bad room code", { status: 400 });
@@ -26,6 +27,12 @@ export class GameRoom {
 
   async fetch(req) {
     const url = new URL(req.url);
+    if (url.pathname.endsWith("/state")) {
+      const state = (await this.ctx.storage.get("state")) || null;
+      const rev = (await this.ctx.storage.get("rev")) || 0;
+      if (state) delete state.prev; // undo history isn't useful from outside
+      return Response.json({ rev, state }, { headers: { "cache-control": "no-store" } });
+    }
     if (url.pathname.endsWith("/history")) {
       const hist = (await this.ctx.storage.get("history")) || [];
       return Response.json(hist, { headers: { "cache-control": "no-store" } });

@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SmukkeGammon</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+[hidden]{display:none!important}
+
+/* Layout: one column — status strip, board, controls. Felt-and-timber board. */
+:root{
+  --bg:#eef0ec; --fg:#1d2420; --muted:#5d6a62; --panel:#ffffff;
+  --felt:#2f5d4a; --wood:#6b4426; --pa:#c9a46a; --pb:#8a3b2e;
+  --cw:#f6f1e6; --cwEdge:#a89c86; --cb:#1f1f22; --cbEdge:#000;
+  --hi:#f2c84b; --glow:#ffe9a8; --accent:#2f5d4a;
+  --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141917; --fg:#e7ece8; --muted:#9aa79f; --panel:#1e2421; --accent:#6fb393; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917; --fg:#e7ece8; --muted:#9aa79f; --panel:#1e2421; --accent:#6fb393; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:8px;height:100%}
+h1{font-family:var(--display);font-size:1.6rem;margin:0;text-wrap:balance}
+.status{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+#msg{font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--panel);font-size:.85rem;color:var(--muted)}
+.dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--cwEdge)}
+.dot.w{background:var(--cw)}.dot.b{background:var(--cb)}
+svg{display:block;width:100%;height:100%;touch-action:manipulation}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+button{font:600 1rem var(--body);padding:10px 16px;border-radius:8px;border:1px solid var(--muted);background:var(--panel);color:var(--fg);cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.note{color:var(--muted);font-size:.85rem;margin:0}
+.back{color:var(--muted);text-decoration:none;font-size:.9rem}.back:hover{color:var(--fg)}
+#confirm[hidden]{display:none!important}
+.msgrow{flex-wrap:nowrap}
+.msgrow .pill,.msgrow button{white-space:nowrap;flex:0 0 auto}
+.msgrow #msg{flex:1 1 auto;min-width:0;text-align:center;text-wrap:balance}
+@media (max-width:600px){.msgrow{flex-wrap:wrap}.msgrow #msg{order:-1;flex-basis:100%;text-align:left}}
+.stage{position:relative;flex:1 1 auto;min-height:180px}
+/* One-screen layout: the page fills the window and the board scales to whatever space is left. */
+html,body{height:100%}
+body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
+.wrap>*:not(.stage){flex:0 0 auto}
+.status,.controls{gap:6px}
+@media (max-width:600px),(max-height:700px){
+  h1{font-size:1.2rem}
+  .note{display:none}
+  button{font-size:.9rem;padding:7px 11px}
+  .pill{font-size:.78rem;padding:3px 8px}
+  #msg{font-size:.9rem}
+}
+@media (max-height:480px){ .back{display:none} body{padding-block:4px} .wrap{gap:4px} }
+.result{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,20,15,.55);border-radius:10px;padding:12px}
+.result .card{background:var(--panel);color:var(--fg);border-radius:12px;padding:20px 24px;max-width:340px;text-align:center;display:grid;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:pop .35s ease-out}
+.resHead{font-family:var(--display);font-size:1.8rem;margin:0;text-wrap:balance}
+.resSub{margin:0;color:var(--muted)}
+@keyframes pop{from{transform:scale(.9);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.result .card{animation:none}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <a class="back" href="/" data-t="allGames">← All games</a>
+  <div class="status">
+    <h1 data-t="title">SmukkeGammon</h1>
+    <button id="langBtn" class="pill" style="cursor:pointer;border:0;margin-left:auto" aria-label="Language / Sprog">EN · DA</button>
+    <span class="pill" id="mode">Connecting…</span>
+  </div>
+  <div class="status">
+    <span class="pill" id="pipPill" title="Pip count: total points each side still has to move to bear everything off"><span class="dot w"></span><span id="pipW">167</span> · <span class="dot b"></span><span id="pipB">167</span> <span data-t="pips">pips</span> <span id="pipLead"></span></span>
+    <span class="pill"><span class="dot w"></span><span id="seatW">White: open</span> · <span class="dot b"></span><span id="seatB">Black: open</span></span>
+  </div>
+  <p id="ai" class="note" hidden></p>
+  <div id="langPick" class="result" style="position:fixed;z-index:20" hidden>
+    <div class="card">
+      <p class="resHead">Language · Sprog</p>
+      <p class="resSub">Choose your language. Your opponent can choose their own.<br>Vælg dit sprog. Din modstander kan vælge sit eget.</p>
+      <div class="controls" style="justify-content:center">
+        <button class="primary" data-lang="en">English</button>
+        <button class="primary" data-lang="da">Dansk</button>
+      </div>
+    </div>
+  </div>
+  <div class="stage">
+    <svg id="board" viewBox="0 0 540 400" role="img" aria-label="Backgammon board"></svg>
+    <div id="result" class="result" role="dialog" aria-live="polite" hidden>
+      <div class="card">
+        <p id="resHead" class="resHead"></p>
+        <p id="resSub" class="resSub"></p>
+        <div class="controls" style="justify-content:center">
+          <button id="again" class="primary" data-t="again">Play again</button>
+          <button id="look" data-t="look">View board</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="status msgrow"><span class="pill"><span data-t="room">Room</span> <b id="roomCode" style="margin-left:4px"></b></span><span id="msg">Loading the table…</span><button id="invite" data-t="invite">Copy invite link</button></div>
+  <div class="controls">
+    <button id="roll" class="primary">Roll dice</button>
+    <button id="undo" data-t="undo">Undo move</button>
+    <button id="confirmTurn" class="primary" hidden data-t="confirmMove">Confirm move</button>
+    <button id="autoBtn" hidden>Auto finish</button>
+    <button id="sitW" data-t="sitW">Sit as White</button>
+    <button id="sitB" data-t="sitB">Sit as Black</button>
+    <button id="leave" data-t="leaveSeat" hidden>Leave seat</button>
+    <button id="botW" data-t="inviteW" hidden>Invite bot as White</button>
+    <button id="botB" data-t="inviteB" hidden>Invite bot as Black</button>
+    <button id="botX" data-t="removeBot" hidden>Remove bot</button>
+    <button id="newg" data-t="newGameBtn">New game</button>
+    <button id="vsai">Play vs computer</button>
+    <span id="confirm" hidden><button id="newYes" data-t="newYes">Yes, reset board</button> <button id="newNo" data-t="cancel">Cancel</button></span>
+  </div>
+  <p class="note" data-t="note">Tap one of your checkers, then a highlighted point (or the tray on the right to bear off). White moves anticlockwise toward the bottom-right home; Black toward the top-right. Moves save as you make them, so your friend sees them live. Send your friend the invite link to play in this room.</p>
+</div>
+
+<script>
+const START=()=>{const p=Array(24).fill(0);p[23]=2;p[12]=5;p[7]=3;p[5]=5;p[0]=-2;p[11]=-5;p[16]=-3;p[18]=-5;
+  return {pts:p,bar:{w:0,b:0},off:{w:0,b:0},turn:"w",rem:[],dice:[],seats:{w:null,b:null},winner:null,opening:{w:null,b:null},auto:{w:false,b:false},log:[["newGame"]],prev:null,
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),started:new Date().toISOString(),moves:[]}};
+// Point numbers from the mover's own side (1 = their last point before bearing off)
+const ptFor=(c,i)=>i==="bar"?"bar":i==="off"?"off":String(c==="w"?i+1:24-i);
+let S=START(), me=null, db=null, ref=null, local=true, sel=null, writing=false, pending=null;
+let resultDismissed=false;
+let mode="local", onlineS=null, sampler=null, ws=null, rev=0, room="", connected=false, aiBusy=false, aiGame=0;
+const opp=c=>c==="w"?"b":"w";
+const sign=c=>c==="w"?1:-1;
+const cnt=(st,i,c)=>Math.max(0,st.pts[i]*sign(c));
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+function allHome(st,c){if(st.bar[c])return false;for(let i=0;i<24;i++){const home=c==="w"?i<=5:i>=18;if(!home&&cnt(st,i,c))return false}return true}
+// src: index, or "bar". returns dest index, "off", or null
+function dest(st,c,src,d){
+  if(st.bar[c]&&src!=="bar")return null;
+  if(src==="bar"){if(!st.bar[c])return null}else if(!cnt(st,src,c))return null;
+  const from=src==="bar"?(c==="w"?24:-1):src;
+  const t=from-sign(c)*d;
+  if(t<0||t>23){
+    if(src==="bar"||!allHome(st,c))return null;
+    const exact=c==="w"?t===-1:t===24;
+    if(!exact){ // higher die: only if no checker farther from home
+      if(c==="w"){for(let i=src+1;i<=5;i++)if(cnt(st,i,c))return null}
+      else{for(let i=18;i<src;i++)if(cnt(st,i,c))return null}
+    }
+    return "off";
+  }
+  if(cnt(st,t,opp(c))>=2)return null;
+  return t;
+}
+function apply(st,c,src,d){
+  const n=clone(st), t=dest(st,c,src,d);
+  if(src==="bar")n.bar[c]--;else n.pts[src]-=sign(c);
+  if(t==="off")n.off[c]++;
+  else{if(cnt(n,t,opp(c))===1){n.pts[t]=0;n.bar[opp(c)]++}n.pts[t]+=sign(c)}
+  n.rem.splice(n.rem.indexOf(d),1);
+  return n;
+}
+function srcs(st,c){return st.bar[c]?["bar"]:[...Array(24).keys()].filter(i=>cnt(st,i,c))}
+function depth(st,c){let best=0;for(const d of new Set(st.rem))for(const s of srcs(st,c))if(dest(st,c,s,d)!==null){best=Math.max(best,1+depth(apply(st,c,s,d),c));if(best===st.rem.length)return best}return best}
+// Legal first steps under the full rules: must use as many dice as possible; if only one, the higher.
+function legal(st){
+  const c=st.turn,out=[];let max=0;
+  for(const d of new Set(st.rem))for(const s of srcs(st,c)){const t=dest(st,c,s,d);if(t===null)continue;
+    const dp=1+depth(apply(st,c,s,d),c);out.push({s,d,t,dp});max=Math.max(max,dp)}
+  let ok=out.filter(m=>m.dp===max);
+  if(max===1&&st.rem.length===2&&st.rem[0]!==st.rem[1]){const hi=Math.max(...ok.map(m=>m.d));ok=ok.filter(m=>m.d===hi)}
+  return ok;
+}
+const name=c=>t(c==="w"?"white":"black");
+// ---------- Language: each viewer's own choice, kept on their device ----------
+const STR={
+ en:{white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
+  invite:"Copy invite link",copied:"Link copied",copyPrompt:"Copy this link for your friend:",undo:"Undo move",confirmMove:"Confirm move",
+  sitW:"Sit as White",sitB:"Sit as Black",newGameBtn:"New game",newYes:"Yes, reset board",cancel:"Cancel",
+  vsComputer:"Play vs computer",backOnline:"Back to online table",
+  note:"Tap one of your checkers, then a highlighted point (or the tray on the right to bear off). White moves anticlockwise toward the bottom-right home; Black toward the top-right. Moves save as you make them, so your friend sees them live. Send your friend the invite link to play in this room.",
+  newGame:"New game. Each player rolls one die; the higher roll goes first.",
+  practice:"Practice game vs the computer. You're White, so roll to start.",
+  openRolled:(c,d,o)=>c+" rolled "+d+". "+o+" to roll.",
+  tie:d=>"Both rolled "+d+". Tie, so roll again.",
+  openDone:(w,b,f,hi,lo)=>"White rolled "+w+", Black rolled "+b+". "+f+" goes first and plays "+hi+"–"+lo+".",
+  rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
+  noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
+  played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
+  toRoll:c=>c+" to roll.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
+  yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
+  confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
+  notSaved:"Not connected, so that move wasn't saved. Reconnecting…",connLost:"Connection lost. Reconnecting…",
+  rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
+  ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
+  seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  youWin:"You win!",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
+  kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
+  worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
+  autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
+ da:{white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
+  invite:"Kopiér invitationslink",copied:"Link kopieret",copyPrompt:"Kopiér dette link til din ven:",undo:"Fortryd træk",confirmMove:"Bekræft træk",
+  sitW:"Spil som Hvid",sitB:"Spil som Sort",newGameBtn:"Nyt spil",newYes:"Ja, nulstil brættet",cancel:"Annuller",
+  vsComputer:"Spil mod computeren",backOnline:"Tilbage til onlinebordet",
+  note:"Tryk på en af dine brikker og derefter på et markeret felt (eller bakken til højre for at tage brikker af). Hvid bevæger sig mod uret mod hjemmet nederst til højre, Sort mod hjemmet øverst til højre. Træk gemmes med det samme, så din ven ser dem live. Send invitationslinket til din ven for at spille i dette rum.",
+  newGame:"Nyt spil. Hver spiller slår med én terning, og den højeste starter.",
+  practice:"Træningsspil mod computeren. Du er Hvid, så slå for at starte.",
+  openRolled:(c,d,o)=>c+" slog "+d+". "+o+" skal slå.",
+  tie:d=>"Begge slog "+d+". Uafgjort, så slå igen.",
+  openDone:(w,b,f,hi,lo)=>"Hvid slog "+w+", Sort slog "+b+". "+f+" starter og spiller "+hi+"–"+lo+".",
+  rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
+  noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
+  played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
+  toRoll:c=>c+" skal slå.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
+  yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
+  confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
+  notSaved:"Ingen forbindelse, så trækket blev ikke gemt. Forbinder igen…",connLost:"Forbindelsen blev afbrudt. Forbinder igen…",
+  rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
+  ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
+  seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  youWin:"Du vandt!",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
+  kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
+  worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
+  autoFinish:"Spil automatisk færdig",stopAuto:"Stop automatisk spil",autoOn:c=>"Computeren spiller løbet færdigt for "+c+".",thinking:"Computeren tænker…",compPlayed:p=>"Computeren spillede "+p+"."}
+};
+let lang=(()=>{try{return localStorage.getItem("bg-lang")}catch(e){return null}})();
+function t(k,...a){const d=STR[lang]||STR.en;const v=k in d?d[k]:STR.en[k];return typeof v==="function"?v(...a):(v??k)}
+const isColour=x=>x==="w"||x==="b";
+// The shared game log is stored as message codes, so each player reads it in their own language.
+function T(log){
+  if(!log)return "";if(typeof log==="string")return log;
+  return log.map(tok=>t(tok[0],...tok.slice(1).map(x=>isColour(x)?name(x):x))).join(" ");
+}
+function applyStatic(){
+  document.documentElement.lang=lang==="da"?"da":"en-AU";
+  document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
+  document.title=t("title");
+  document.getElementById("langBtn").textContent=lang==="da"?"DA · EN":"EN · DA";
+}
+function setLang(l){lang=l;try{localStorage.setItem("bg-lang",l)}catch(e){}document.getElementById("langPick").hidden=true;applyStatic();render()}
+
+function mine(c){return mode==="ai"?c==="w":(local||S.seats[c]===me)}
+
+// ---------- Computer opponent (plays Black) ----------
+function allPlays(st){
+  const c=st.turn,out=new Map(),seen=new Set();
+  (function go(s,moves){
+    const key=JSON.stringify([s.pts,s.bar,s.off,s.rem]);if(seen.has(key))return;seen.add(key);
+    const lg=s.rem.length?legal(s):[];
+    if(!lg.length){const k=JSON.stringify([s.pts,s.bar,s.off]);if(!out.has(k))out.set(k,{moves,end:s});return}
+    for(const m of lg){const hit=m.t!=="off"&&cnt(s,m.t,opp(c))===1;go(apply(s,c,m.s,m.d),[...moves,{...m,hit}])}
+  })(st,[]);
+  return [...out.values()];
+}
+const ptB=i=>i==="bar"?"bar":i==="off"?"off":String(24-i);
+const notation=p=>p.moves.map(m=>ptB(m.s)+"/"+ptB(m.t)+(m.hit?"*":"")).join(" ")||"(no move)";
+function pips(st,c){let t=st.bar[c]*25;for(let i=0;i<24;i++)t+=cnt(st,i,c)*(c==="w"?i+1:24-i);return t}
+function evalB(st){
+  let sc=pips(st,"w")-pips(st,"b");
+  for(let i=0;i<24;i++){const n=cnt(st,i,"b");
+    if(n>=2)sc+=i>=18?6:3;
+    if(n===1){let risk=0;for(let j=i+1;j<24&&j<=i+12;j++)if(cnt(st,j,"w"))risk=Math.max(risk,j-i<=6?12:5);
+      if(st.bar.w&&i>=18)risk=Math.max(risk,12);sc-=risk}}
+  return sc;
+}
+function describe(st){
+  const mineL=[],theirs=[];
+  for(let i=0;i<24;i++){const b=cnt(st,i,"b"),w=cnt(st,i,"w");if(b)mineL.push(ptB(i)+":"+b);if(w)theirs.push(ptB(i)+":"+w)}
+  return "Points are numbered from YOUR side: you move from 24 down to 1 and bear off from your home board, points 1-6. "+
+    "Your checkers (point:count): "+mineL.join(", ")+". On bar: "+st.bar.b+". Borne off: "+st.off.b+". "+
+    "Opponent's checkers (same numbering; they move from 1 up to 24, their home is 19-24): "+theirs.join(", ")+". On bar: "+st.bar.w+". Borne off: "+st.off.w+". "+
+    "Pip counts: you "+pips(st,"b")+", opponent "+pips(st,"w")+".";
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function aiTurn(){
+  if(aiBusy||mode!=="ai"||S.turn!=="b"||S.winner||S.opening)return;
+  aiBusy=true;const game=aiGame;
+  try{
+    await sleep(700);if(game!==aiGame||mode!=="ai")return;
+    if(S.done){await sleep(600);if(game===aiGame&&mode==="ai")confirmTurn(true);return}
+    if(!S.rem.length){rollFor("b");if(S.turn!=="b"||!S.rem.length)return}
+    const plays=allPlays(S);
+    if(!plays.length)return;
+    plays.forEach(p=>p.score=evalB(p.end));plays.sort((a,b)=>b.score-a.score);
+    let pick=plays[0],why="";
+    if(botAvailable){const wm=await wildbgPlay(S);if(wm&&wm.length)pick={moves:wm.map(m=>({...m,hit:m.t!=="off"&&cnt(S,m.t,"w")===1}))}}
+    if(plays.length>1&&sampler){
+      const cands=plays.slice(0,12);
+      setThinking(t("thinking"));
+      try{
+        const prompt="You are an expert backgammon player playing Black. Pick the best play for this roll.\n\n"+describe(S)+
+          "\nDice: "+S.dice.join("-")+".\n\nCandidate plays (notation from/to, * = hit):\n"+
+          cands.map((p,k)=>k+": "+notation(p)).join("\n")+
+          '\n\nReply with only JSON like {"pick": 0, "why": "one short sentence"}.';
+        const r=await sampler.json(prompt,{modelTier:"default",effort:"low"});
+        const k=Number(r&&r.pick);if(Number.isInteger(k)&&cands[k])pick=cands[k];
+        why=r&&typeof r.why==="string"?r.why.slice(0,160):"";
+      }catch(e){if(["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(e.code))sampler=null}
+    }
+    if(game!==aiGame||mode!=="ai")return;
+    setThinking(t("compPlayed",notation(pick)));
+    for(const m of pick.moves){await sleep(550);if(game!==aiGame||mode!=="ai")return;move(m)}
+  }finally{aiBusy=false;if(game===aiGame)maybeAI()}
+}
+// ---------- Auto finish: once the sides have passed each other, the computer can race home for a player ----------
+function isRace(st){
+  if(st.bar.w||st.bar.b)return false;
+  let backW=-1,backB=24;
+  for(let i=0;i<24;i++){if(cnt(st,i,"w"))backW=Math.max(backW,i);if(cnt(st,i,"b"))backB=Math.min(backB,i)}
+  return backW<backB;
+}
+function raceScore(st,c){let far=0;for(let i=0;i<24;i++){const n=cnt(st,i,c);if(n&&(c==="w"?i>5:i<18))far+=n}return -pips(st,c)+3*st.off[c]-2*far}
+let autoBusy=false;
+function maybeAuto(){
+  if(autoBusy||S.winner||S.opening)return;
+  const c=S.turn;if(!(S.auto&&S.auto[c])||!mine(c))return;
+  if(mode==="ai"&&c==="b")return;
+  autoBusy=true;const snap=S;
+  setTimeout(()=>{
+    autoBusy=false;
+    if(S!==snap){maybeAuto();return}
+    if(S.winner||!(S.auto&&S.auto[S.turn])||!mine(S.turn))return;
+    if(S.done){confirmTurn(false);return}
+    if(!S.rem.length){rollFor();return}
+    const plays=allPlays(S);if(!plays.length)return;
+    plays.sort((a,b)=>raceScore(b.end,c)-raceScore(a.end,c));
+    const m=plays[0].moves[0];if(m)move(m);
+  },650);
+}
+function toggleAuto(){
+  const c=myColor();if(!c||S.winner)return;
+  const n=clone(S);n.auto=Object.assign({w:false,b:false},n.auto);n.auto[c]=!n.auto[c];sel=null;commit(n);
+}
+function maybeAI(){
+  if(mode==="ai"&&S.opening&&S.opening.w!=null&&S.opening.b==null&&!aiBusy){aiBusy=true;const g=aiGame;
+    setTimeout(()=>{aiBusy=false;if(g===aiGame&&mode==="ai")openingRoll("b")},700);return}
+  if(mode==="ai"&&S.opening)return;if(mode==="ai"&&S.turn==="b"&&!S.winner&&!aiBusy)aiTurn()}
+function setThinking(t){const el=document.getElementById("ai");el.textContent=t;el.hidden=!t}
+
+function endTurnIfDone(n,fromMove){
+  if(n.off.w===15||n.off.b===15){
+    const w=n.off.w===15?"w":"b",l=opp(w);n.winner=w;n.rem=[];n.prev=null;
+    let inHome=0;for(let i=0;i<24;i++)if((w==="w"?i>=18:i<=5)&&cnt(n,i,l))inHome++;
+    n.kind=n.off[l]>0?"single":(n.bar[l]||inHome)?"backgammon":"gammon";
+    n.points={single:1,gammon:2,backgammon:3}[n.kind];
+    n.log=[["wins",w,n.kind]];return n}
+  if(n.rem.length&&!legal(n).length){
+    if(!fromMove){n.log=[["noMoves",n.turn,n.dice[0],n.dice[1]]];n.rem=[];return passTurn(n)}
+    n.rem=[]}
+  if(!n.rem.length){
+    if(fromMove){n.done=true;return n}
+    return passTurn(n)}
+  return n;
+}
+// A player with a checker on the bar is shut out when the opponent holds all six entry points: no roll could help, so skip them.
+function shutOut(st,c){
+  if(!st.bar[c])return false;
+  for(let d=1;d<=6;d++){const i=c==="w"?24-d:d-1;if(cnt(st,i,opp(c))<2)return false}
+  return true;
+}
+function passTurn(n){
+  n.turn=opp(n.turn);n.dice=[];n.prev=null;n.done=false;
+  n.log=Array.isArray(n.log)?n.log:[];
+  if(shutOut(n,n.turn)&&!shutOut(n,opp(n.turn))){
+    n.log=n.log.concat([["shutOut",n.turn]]);
+    if(n.moves)n.moves.push({p:n.turn,dice:[],play:["shut out"]});
+    n.turn=opp(n.turn);
+  }
+  n.log=n.log.concat([["toRoll",n.turn]]);return n}
+function confirmTurn(force){
+  if(!S.done||S.winner||(!force&&!mine(S.turn)))return;
+  const n=clone(S);n.log=[["played",S.turn,lastPlay(S)]];sel=null;commit(passTurn(n));
+}
+function lastPlay(st){const t=st.moves&&st.moves[st.moves.length-1];return t&&t.play.length?t.play.join(" "):""}
+function myColor(){
+  if(mode==="ai")return "w";
+  if(mode==="online")return S.seats.w===me?"w":S.seats.b===me?"b":null;
+  return S.opening?(S.opening.w==null?"w":"b"):S.turn;
+}
+function openingRoll(c){
+  if(!S.opening||S.winner||S.opening[c]!=null)return;
+  const n=clone(S),d=1+Math.floor(Math.random()*6);n.opening[c]=d;n.tieRoll=null;
+  const o=n.opening;
+  if(o.w==null||o.b==null){n.log=[["openRolled",c,d,opp(c)]]}
+  else if(o.w===o.b){n.log=[["tie",d]];n.tieRoll=d;n.opening={w:null,b:null}}
+  else{
+    const first=o.w>o.b?"w":"b",hi=Math.max(o.w,o.b),lo=Math.min(o.w,o.b);
+    n.openRoll={w:o.w,b:o.b};n.opening=null;n.turn=first;n.dice=[hi,lo];n.rem=[hi,lo];n.prev=null;n.done=false;
+    n.moves=n.moves||[];n.moves.push({p:first,dice:[hi,lo],play:[]});
+    n.log=[["openDone",o.w,o.b,first,hi,lo]];
+  }
+  sel=null;commit(n);
+}
+function roll(){if(S.opening){const c=myColor();if(c)openingRoll(c);return}if(S.winner||S.rem.length||S.done||!mine(S.turn))return;rollFor(S.turn)}
+function rollFor(){
+  const a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);
+  let n=clone(S);n.dice=[a,b];n.rem=a===b?[a,a,a,a]:[a,b];n.prev=null;
+  n.moves=n.moves||[];n.moves.push({p:n.turn,dice:[a,b],play:[]});
+  n.log=[["rolled",n.turn,a,b]];
+  n=endTurnIfDone(n);commit(n);
+}
+function move(m){
+  const hit=m.t!=="off"&&cnt(S,m.t,opp(S.turn))===1;
+  if(S.done)return;
+  let n=apply(S,S.turn,m.s,m.d);n.prev=clone(S);
+  if(n.moves&&n.moves.length)n.moves[n.moves.length-1].play.push(ptFor(S.turn,m.s)+"/"+ptFor(S.turn,m.t)+(hit?"*":""));
+  n.log=[["rolled",S.turn,S.dice[0],S.dice[1]]];
+  n=endTurnIfDone(n,true);
+  if(n.winner)n.prev=null;
+  sel=null;commit(n);
+}
+function undo(){if(!S.prev||S.winner||!mine(S.turn))return;const p=clone(S.prev);p.seats=S.seats;sel=null;commit(p)}
+
+function saveRecord(n){
+  if(!n.id)return;
+  const who=c=>mode==="ai"?(c==="w"?"You":"Computer"):mode==="local"?(c==="w"?"White":"Black"):(n.seats[c]===me?"You":"Friend");
+  const rec={id:n.id,started:n.started||null,finished:new Date().toISOString(),
+    mode:mode==="ai"?"practice vs computer":mode==="online"?"online":"pass-and-play",
+    players:{white:who("w"),black:who("b")},winner:n.winner==="w"?"white":"black",result:n.kind||"single",points:n.points||1,
+    borneOff:{white:n.off.w,black:n.off.b},
+    moves:(n.moves||[]).map(t=>(t.p==="w"?"W ":"B ")+t.dice.join("-")+": "+(t.play.length?t.play.join(" "):"no move"))};
+  send({type:"record",rec});
+}
+async function commit(n){
+  const justWon=n.winner&&!S.winner;
+  S=n;render();
+  if(justWon)saveRecord(n);
+  setTimeout(maybeAuto,0);setTimeout(maybeBot,0);
+  if(mode==="ai"){maybeAI();return}
+  if(mode!=="online")return;
+  onlineS=n;
+  if(!send({type:"set",state:n,base:rev}))setMsg(t("notSaved"));
+}
+
+
+// ---------- wildbg bot (runs in the browser of whoever invited it) ----------
+// The engine files are built from github.com/carsten-wenderdel/wildbg by this repo's GitHub Action
+// and served from ./wildbg/. If they are missing, the bot buttons simply stay hidden.
+let wb=null,wbState="unknown",botAvailable=false;
+async function probeWildbg(){
+  try{const r=await fetch("./wildbg/wildbg_wasm.js",{method:"HEAD",cache:"no-store"});botAvailable=r.ok}catch(e){botAvailable=false}
+  render();
+}
+async function loadWildbg(){
+  if(wb)return wb;if(wbState==="failed")return null;
+  try{const mod=await import("./wildbg/wildbg_wasm.js");await mod.default();wb=new mod.Wildbg();wbState="ready";return wb}
+  catch(e){console.warn("wildbg could not start",e);wbState="failed";return null}
+}
+// wildbg sees the board from the mover's side: points 1-24 toward home, 25 = mover's bar, 0 = opponent's bar.
+function toWildbg(st,c){
+  const a=new Array(26).fill(0);
+  for(let k=1;k<=24;k++){const i=c==="w"?k-1:24-k;a[k]=cnt(st,i,c)-cnt(st,i,opp(c))}
+  a[25]=st.bar[c];a[0]=-st.bar[opp(c)];return a;
+}
+const fromWb=(k,c)=>k===25?"bar":k===0?"off":(c==="w"?k-1:24-k);
+// Find our own legal steps that take a checker from s to t (wildbg may merge two dice into one step).
+function stepsTo(st,c,s,t,depth){
+  if(depth>4)return null;
+  for(const m of legal(st)){
+    if(m.s!==s)continue;
+    if(m.t===t)return [m];
+    if(m.t==="off")continue;
+    const rest=stepsTo(apply(st,c,m.s,m.d),c,m.t,t,depth+1);
+    if(rest)return [m,...rest];
+  }
+  return null;
+}
+async function wildbgPlay(st){
+  const e=await loadWildbg();if(!e)return null;
+  const c=st.turn;let res;
+  try{res=e.analyze(toWildbg(st,c),st.dice[0],st.dice[1],false)}catch(x){console.warn(x);return null}
+  const best=res&&res.moves&&res.moves[0];if(!best)return null;
+  let cur=st;const out=[];
+  for(const step of best.play){
+    const seq=stepsTo(cur,c,fromWb(step.from,c),fromWb(step.to,c),0);
+    if(!seq)return null;
+    for(const m of seq){out.push(m);cur=apply(cur,c,m.s,m.d)}
+  }
+  return out;
+}
+const isBot=c=>typeof S.seats[c]==="string"&&S.seats[c].startsWith("bot:");
+const botMine=c=>isBot(c)&&S.seats[c]==="bot:"+me;
+let botBusy=false;
+function fallbackPlay(st){
+  const ps=allPlays(st);const c=st.turn;
+  ps.forEach(p=>p.score=c==="b"&&!isRace(st)?evalB(p.end):raceScore(p.end,c));
+  ps.sort((a,b)=>b.score-a.score);return ps[0]?ps[0].moves:[];
+}
+function maybeBot(){
+  if(botBusy||mode!=="online"||S.winner)return;
+  if(S.opening){
+    for(const c of ["w","b"])if(botMine(c)&&S.opening[c]==null){
+      botBusy=true;const snap=S;
+      setTimeout(()=>{botBusy=false;if(S===snap)openingRoll(c);else maybeBot()},800);return}
+    return;
+  }
+  const c=S.turn;if(!botMine(c))return;
+  botBusy=true;const snap=S;
+  setTimeout(async()=>{
+    if(S!==snap){botBusy=false;maybeBot();return}
+    if(S.done){botBusy=false;confirmTurn(true);return}
+    if(!S.rem.length){botBusy=false;rollFor();return}
+    setThinking(t("botThinking"));
+    let moves=await wildbgPlay(S);
+    if(S!==snap){botBusy=false;setThinking("");maybeBot();return}
+    if(!moves)moves=fallbackPlay(S);
+    setThinking("");
+    for(const m of moves){await sleep(550);if(S.turn!==c||S.winner)break;move(m)}
+    botBusy=false;maybeBot();
+  },800);
+}
+function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=clone(S);n.seats[c]="bot:"+me;commit(n);loadWildbg()}
+function removeBots(){const n=clone(S);["w","b"].forEach(c=>{if(isBot(c)){n.seats[c]=null;if(n.auto)n.auto[c]=false}});commit(n)}
+
+// ---------- drawing ----------
+const W=36,X0=10,BARW=40,TRAY=482;
+const colX=c=>X0+c*W+(c>=6?BARW:0);
+// Black's player sees the board mirrored top-to-bottom, so their home board is bottom-right, as White's is for White.
+function flipped(){return mode==="online"&&!!me&&S.seats.b===me&&S.seats.w!==me}
+function pos(i){const p=i>=12?{x:colX(i-12),top:true}:{x:colX(11-i),top:false};if(flipped())p.top=!p.top;return p}
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e}
+// hl: 0 none, 1 can move (soft glow), 2 picked up (stronger glow, lifted slightly)
+function checker(g,cx,cy,c,label,hl){
+  hl=hl===true?1:(hl||0);
+  if(hl)el("circle",{cx,cy,r:hl===2?21:19,fill:"var(--glow)",opacity:hl===2?.75:.42,filter:"url(#soft)","pointer-events":"none"},g);
+  if(hl===2){cy-=2;el("ellipse",{cx,cy:cy+5,rx:14,ry:12,fill:"#000",opacity:.18,filter:"url(#soft)"},g)}
+  el("circle",{cx,cy,r:15,fill:c==="w"?"var(--cw)":"var(--cb)",stroke:c==="w"?"var(--cwEdge)":"var(--cbEdge)","stroke-width":1.5},g);
+  if(label){const t=el("text",{x:cx,y:cy+5,"text-anchor":"middle","font-size":14,"font-weight":700,fill:c==="w"?"#1f1f22":"#f6f1e6"},g);t.textContent=label}
+}
+function render(){
+  const svg=document.getElementById("board");svg.innerHTML="";
+  const lg=legal(S), can=!S.winner&&S.rem.length&&mine(S.turn);
+  const targets=sel===null?[]:lg.filter(m=>m.s===sel);
+  const sources=can?new Set(lg.map(m=>m.s)):new Set();
+  svg.innerHTML='<defs><filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>';
+  el("rect",{x:0,y:0,width:540,height:400,fill:"var(--wood)"},svg);
+  el("rect",{x:X0,y:10,width:6*W,height:380,fill:"var(--felt)"},svg);
+  el("rect",{x:X0+6*W+BARW,y:10,width:6*W,height:380,fill:"var(--felt)"},svg);
+  el("rect",{x:TRAY,y:10,width:48,height:380,rx:4,fill:"var(--felt)"},svg);
+  for(let i=0;i<24;i++){
+    const p=pos(i),col=(i%2)?"var(--pb)":"var(--pa)";
+    const tip=p.top?170:230,base=p.top?10:390;
+    const tg=targets.find(m=>m.t===i);
+    const g=el("g",{style:"cursor:pointer"},svg);
+    el("polygon",{points:`${p.x},${base} ${p.x+W},${base} ${p.x+W/2},${tip}`,fill:col},g);
+    if(tg){el("polygon",{points:`${p.x},${base} ${p.x+W},${base} ${p.x+W/2},${tip}`,fill:"var(--glow)",opacity:.32},g);
+      el("circle",{cx:p.x+W/2,cy:p.top?tip-14:tip+14,r:5,fill:"var(--glow)",opacity:.85,filter:"url(#soft)"},g)}
+    el("rect",{x:p.x,y:p.top?10:200,width:W,height:190,fill:"transparent"},g);
+    const lab=el("text",{x:p.x+W/2,y:p.top?24:385,"text-anchor":"middle","font-size":9,fill:"#ffffffaa"},g);
+    lab.textContent=flipped()?24-i:i+1;
+    const n=Math.abs(S.pts[i]),c=S.pts[i]>0?"w":"b";
+    for(let k=0;k<Math.min(n,5);k++){const cy=p.top?30+k*30:370-k*30;
+      const topK=k===Math.min(n,5)-1;checker(g,p.x+W/2,cy,c,k===4&&n>5?String(n):"",topK&&sel===i?2:(topK&&sel===null&&sources.has(i)?1:0))}
+    g.addEventListener("click",()=>tap(i,tg));
+  }
+  // bar
+  const bx=X0+6*W+BARW/2,bg=el("g",{style:"cursor:pointer"},svg);
+  el("rect",{x:X0+6*W,y:10,width:BARW,height:380,fill:"transparent"},bg);
+  if(S.bar.b)checker(bg,bx,flipped()?250:150,"b",S.bar.b>1?String(S.bar.b):"",sel==="bar"&&S.turn==="b"?2:(sel===null&&sources.has("bar")&&S.turn==="b"?1:0));
+  if(S.bar.w)checker(bg,bx,flipped()?150:250,"w",S.bar.w>1?String(S.bar.w):"",sel==="bar"&&S.turn==="w"?2:(sel===null&&sources.has("bar")&&S.turn==="w"?1:0));
+  bg.addEventListener("click",()=>tap("bar"));
+  // trays
+  const offT=targets.find(m=>m.t==="off");
+  const tg=el("g",{style:"cursor:pointer"},svg);
+  el("rect",{x:TRAY,y:10,width:48,height:380,rx:4,fill:offT?"var(--glow)":"transparent",opacity:.28},tg);
+  (flipped()?[["w",70],["b",330]]:[["b",70],["w",330]]).forEach(([c,y])=>{el("rect",{x:TRAY+8,y:y-12,width:32,height:24,rx:4,fill:c==="w"?"var(--cw)":"var(--cb)"},tg);
+    const t=el("text",{x:TRAY+24,y:y+5,"text-anchor":"middle","font-size":13,"font-weight":700,fill:c==="w"?"#1f1f22":"#f6f1e6"},tg);t.textContent=S.off[c]});
+  tg.addEventListener("click",()=>offT&&move(offT));
+  // dice
+  // During the opening each colour rolls its own die: White's die is white, Black's is black.
+  const dieAt={w:X0+6*W+BARW+96,b:X0+96};
+  if(S.opening){
+    const o=S.opening;
+    if(o.w!=null)drawDie(dieAt.w,182,o.w,"w",1,false);
+    if(o.b!=null)drawDie(dieAt.b,182,o.b,"b",1,false);
+    if(o.w==null&&o.b==null&&S.tieRoll){drawDie(dieAt.w,182,S.tieRoll,"w",.45,false);drawDie(dieAt.b,182,S.tieRoll,"b",.45,false)}
+  }else if(S.openRoll&&S.moves&&S.moves.length===1&&S.turn===S.moves[0].p&&!S.winner){
+    // First turn: keep both opening dice in their own colours; the higher one (the starter's) glows.
+    const o=S.openRoll,hiC=o.w>o.b?"w":"b";
+    ["w","b"].forEach(c=>drawDie(dieAt[c],182,o[c],c,S.rem.includes(o[c])?1:.35,c===hiC));
+  }else{
+    S.dice.forEach((d,k)=>{const used=S.rem.length<(S.dice[0]===S.dice[1]?4:2)&&!S.rem.includes(d)||(S.dice[0]===S.dice[1]&&k>=S.rem.length);
+      drawDie((S.turn==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,"plain",used?.35:1,false)});
+  }
+  // status
+  const turnMine=mine(S.turn);
+  const L=T(S.log);setMsg(S.winner?L:(L+(S.rem.length?(turnMine?" "+t("yourMove"):" "+t("waitingFor",name(S.turn))):(turnMine?"":" "+t("waitingFor",name(S.turn))))));
+  const roll=document.getElementById("roll");
+  if(S.opening){const c=myColor();
+    roll.disabled=!c||S.opening[c]!=null;
+    roll.textContent=!c?t("takeSeat"):t("rollStart",name(c));
+    setMsg(T(S.log)+(mode==="online"&&!c?" "+t("sitToJoin"):""));
+  }else{
+    roll.disabled=!!(S.winner||S.rem.length||!turnMine);
+    roll.textContent=S.winner?t("gameOver"):t("rollFor",name(S.turn));
+  }
+  document.getElementById("undo").disabled=!(S.prev&&turnMine&&!S.winner);
+  const ab=document.getElementById("autoBtn"),myc=myColor(),autoMine=!!(S.auto&&myc&&S.auto[myc]);
+  ab.hidden=!(myc&&!S.winner&&!S.opening&&(autoMine||isRace(S))&&!(mode==="ai"&&myc!=="w"));
+  ab.textContent=autoMine?t("stopAuto"):t("autoFinish");ab.classList.toggle("primary",!autoMine&&isRace(S));
+  const cf=document.getElementById("confirmTurn");cf.hidden=!(S.done&&turnMine&&!S.winner);
+  document.getElementById("roll").hidden=!cf.hidden;
+  if(S.done&&!S.winner)setMsg(T(S.log)+" "+(turnMine?t("confirmQ"):t("deciding",name(S.turn))));
+  const pw=pips(S,"w"),pb=pips(S,"b"),diff=Math.abs(pw-pb);
+  document.getElementById("pipW").textContent=pw;document.getElementById("pipB").textContent=pb;
+  const lead=pw<pb?"w":"b",leader=mode==="ai"?(lead==="w"?t("you"):t("computer")):mode==="online"?(S.seats[lead]===me?t("you"):t("friend")):name(lead);
+  document.getElementById("pipLead").textContent=diff?t("ahead",leader,diff):t("even");
+  if(mode==="ai"&&S.turn==="b"&&!S.winner)setMsg(T(S.log)+" "+t("compTurn"));
+  const res=document.getElementById("result");
+  if(!S.winner){resultDismissed=false;res.hidden=true}
+  else{
+    const w=S.winner,l=opp(w),meWon=mode!=="local"&&mine(w);
+    document.getElementById("resHead").textContent=mode==="local"?t("colourWins",name(w)):meWon?t("youWin"):mode==="ai"?t("compWins"):t("friendWins");
+    const kind=S.kind||"single",pts=S.points||1;
+    const kindTxt=t("kind"+kind);
+    const loser=mode==="ai"?(l==="b"?t("seatComputer"):t("You")):name(l);
+    document.getElementById("resSub").textContent=kindTxt+t("worth",pts)+t("boreOff",loser,S.off[l]);
+    res.hidden=resultDismissed;
+  }
+  const seatTxt=c=>isBot(c)?t("seatBot")+(botMine(c)?" ("+t("thisDevice")+")":""):S.seats[c]?(S.seats[c]===me&&!local?t("seatYou"):t("seatTaken")):t("seatOpen");
+  document.getElementById("seatW").textContent=name("w")+": "+(mode==="ai"?t("seatYou"):local?t("seatDevice"):seatTxt("w"));
+  document.getElementById("seatB").textContent=name("b")+": "+(mode==="ai"?t("seatComputer"):local?t("seatDevice"):seatTxt("b"));
+  const sitting=!local&&(S.seats.w===me||S.seats.b===me);
+  document.getElementById("leave").hidden=!(mode==="online"&&sitting);
+  const canBot=mode==="online"&&botAvailable;
+  document.getElementById("botW").hidden=!(canBot&&!S.seats.w);
+  document.getElementById("botB").hidden=!(canBot&&!S.seats.b);
+  document.getElementById("botX").hidden=!(mode==="online"&&(isBot("w")||isBot("b"))&&(sitting||botMine("w")||botMine("b")));
+  document.getElementById("newg").hidden=mode==="online"&&!sitting;
+  document.getElementById("again").hidden=mode==="online"&&!sitting;
+  if(mode==="online"&&!sitting&&!S.winner)setMsg(T(S.log)+" "+t(S.seats.w&&S.seats.b?"watchingFull":"watchingMsg"));
+  document.getElementById("sitW").hidden=mode!=="online"||!!S.seats.w||sitting;
+  document.getElementById("sitB").hidden=mode!=="online"||!!S.seats.b||sitting;
+  document.getElementById("vsai").textContent=mode==="ai"?t("backOnline"):t("vsComputer");
+  document.getElementById("mode").textContent=mode==="ai"?t("modePractice"):mode==="online"?(connected?t("modeOnline",(S.seats.w?1:0)+(S.seats.b?1:0),peerIds.filter(id=>id!==S.seats.w&&id!==S.seats.b).length):t("reconnecting")):t("connecting");
+}
+function drawDie(x,y,v,c,op,glow){
+  const svg=document.getElementById("board");
+  if(glow)el("rect",{x:x-5,y:y-5,width:46,height:46,rx:10,fill:"var(--glow)",opacity:.55,filter:"url(#soft)"},svg);
+  const face=c==="b"?"#1f1f22":c==="w"?"#f6f1e6":"#fffdf7",ink=c==="b"?"#f6f1e6":"#1f1f22";
+  el("rect",{x,y,width:36,height:36,rx:6,fill:face,stroke:c==="b"?"#000":"#7d7363","stroke-width":1.2,opacity:op},svg);
+  const t=el("text",{x:x+18,y:y+25,"text-anchor":"middle","font-size":20,"font-weight":700,fill:ink,opacity:op},svg);t.textContent=v;
+}
+function setMsg(x){const c=S.turn;if(mode==="online"&&!S.winner&&((S.opening&&(botMine("w")||botMine("b")))||(!S.opening&&botMine(c))))x+=" "+t("botHere");if(S.auto&&S.auto[c]&&!S.winner&&!S.opening)x+=" "+t("autoOn",name(c));document.getElementById("msg").textContent=x}
+function tap(i,tg){
+  if(tg){move(tg);return}
+  const lg=legal(S);
+  if(!S.rem.length||!mine(S.turn)){sel=null;render();return}
+  sel=lg.some(m=>m.s===i)?(sel===i?null:i):null;
+  // auto-bear-off / single target convenience
+  render();
+}
+function sit(c){if(!me||S.seats[c]||S.seats.w===me||S.seats.b===me)return;const n=clone(S);n.seats[c]=me;commit(n)}
+function leaveSeat(){const c=S.seats.w===me?"w":S.seats.b===me?"b":null;if(!c)return;
+  const n=clone(S);n.seats[c]=null;if(n.auto)n.auto[c]=false;sel=null;commit(n)}
+function autoSeat(){
+  if(mode!=="online"||!me||S.seats.w===me||S.seats.b===me)return;
+  const free=!S.seats.w?"w":!S.seats.b?"b":null,taken=opp(free||"w");
+  if(free&&S.seats[taken]&&S.seats[taken]!==me)sit(free);
+}
+document.getElementById("roll").onclick=roll;
+document.getElementById("undo").onclick=undo;
+document.getElementById("confirmTurn").onclick=()=>confirmTurn(false);
+document.getElementById("autoBtn").onclick=toggleAuto;
+document.getElementById("leave").onclick=leaveSeat;
+document.getElementById("botW").onclick=()=>inviteBot("w");
+document.getElementById("botB").onclick=()=>inviteBot("b");
+document.getElementById("botX").onclick=removeBots;
+document.getElementById("sitW").onclick=()=>sit("w");
+document.getElementById("sitB").onclick=()=>sit("b");
+document.getElementById("newg").onclick=()=>{document.getElementById("confirm").hidden=false};
+document.getElementById("newNo").onclick=()=>{document.getElementById("confirm").hidden=true};
+document.getElementById("newYes").onclick=()=>{document.getElementById("confirm").hidden=true;aiGame++;setThinking("");const n=START();n.seats=S.seats;sel=null;commit(n)};
+document.getElementById("again").onclick=()=>{aiGame++;setThinking("");const n=START();n.seats=S.seats;
+  if(mode==="ai")n.log=[["practice"]];sel=null;commit(n)};
+document.getElementById("look").onclick=()=>{resultDismissed=true;render()};
+document.getElementById("vsai").onclick=()=>{
+  aiGame++;sel=null;setThinking("");
+  if(mode==="ai"){mode="online";S=onlineS?clone(onlineS):START()}
+  else{mode="ai";S=START();S.log=[["practice"]]}
+  render();
+};
+
+function send(o){if(ws&&ws.readyState===1){ws.send(JSON.stringify(o));return true}return false}
+function playerId(){try{let id=localStorage.getItem("bg-player");if(!id){id="p"+Math.random().toString(36).slice(2,12);localStorage.setItem("bg-player",id)}return id}catch(e){return "p"+Math.random().toString(36).slice(2,12)}}
+const arrivedQuery=new URLSearchParams(location.search);
+const askLanguage=!arrivedQuery.get("room")||arrivedQuery.has("join");
+function roomCode(){
+  const q=new URLSearchParams(location.search);let r=(q.get("room")||"").toLowerCase().replace(/[^a-z0-9-]/g,"");
+  if(r.length<3){const w=["kangaroo","wattle","billabong","galah","jacaranda","quokka","bunyip","coolabah","wombat","kookaburra"];
+    r=w[Math.floor(Math.random()*w.length)]+"-"+Math.floor(100+Math.random()*900);
+    history.replaceState(null,"",location.pathname+"?room="+r)}
+  else if(q.has("join"))history.replaceState(null,"",location.pathname+"?room="+r);
+  return r;
+}
+let retry=0;
+function connect(){
+  const proto=location.protocol==="https:"?"wss:":"ws:";
+  ws=new WebSocket(proto+"//"+location.host+"/api/room/"+room+"/ws");
+  ws.onopen=()=>{retry=0;connected=true;send({type:"hello",player:me});if(mode!=="ai")mode="online";render()};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
+    if(m.type==="presence"){peers=m.players.length;peerIds=m.players;render();return}
+    if(m.type!=="state")return;
+    rev=m.rev;
+    if(!m.state){const n=START();onlineS=n;send({type:"set",state:n,base:rev});if(mode==="online"){S=clone(n);render()}return}
+    onlineS=m.state;
+    if(mode!=="online")return;
+    S=clone(onlineS);if(sel!==null&&!legal(S).some(x=>x.s===sel))sel=null;render();maybeAuto();maybeBot();
+  };
+  ws.onclose=()=>{connected=false;if(mode==="online")setMsg(t("connLost"));
+    setTimeout(connect,Math.min(15000,1000*2**retry++))};
+}
+let peers=0,peerIds=[];
+me=playerId();room=roomCode();local=false;
+document.getElementById("roomCode").textContent=room;
+document.getElementById("invite").onclick=async()=>{const link=location.origin+"/backgammon/?room="+room+"&join=1";
+  try{await navigator.clipboard.writeText(link);document.getElementById("invite").textContent=t("copied")}
+  catch(e){prompt(t("copyPrompt"),link)}
+  setTimeout(()=>document.getElementById("invite").textContent=t("invite"),2000)};
+document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
+document.getElementById("langBtn").onclick=()=>{document.getElementById("langPick").hidden=false};
+applyStatic();
+if(!STR[lang]||askLanguage)document.getElementById("langPick").hidden=false;
+render();connect();probeWildbg();
+</script>
+
+</body></html>

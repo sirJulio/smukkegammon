@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+# built by the GitHub Action from wildbg; not stored in the repo
+public/backgammon/wildbg/
+wildbg/

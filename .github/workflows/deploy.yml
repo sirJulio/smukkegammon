@@ -1,0 +1,86 @@
+# Builds the wildbg backgammon engine to WebAssembly, adds it to the site, and deploys to Cloudflare.
+# Deploying needs two repository secrets: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+# Without them the job still builds and offers the finished site as a downloadable artifact.
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # wildbg code (main) and its stronger neural networks (nets branch), pinned for repeatable builds
+  WILDBG_REPO: https://github.com/carsten-wenderdel/wildbg
+  WILDBG_CODE: d000b0e3c9b143640636882a657f27e67c89361f
+  WILDBG_NETS: 8c42b06f2ff4868431fc0372b2787e612537317d
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch wildbg and its stronger networks
+        run: |
+          git init -q wildbg && cd wildbg
+          git remote add origin "$WILDBG_REPO"
+          git fetch -q --depth 1 origin "$WILDBG_CODE" && git checkout -q FETCH_HEAD
+          git fetch -q --depth 1 origin "$WILDBG_NETS"
+          git checkout -q FETCH_HEAD -- neural-nets/contact.onnx neural-nets/race.onnx
+          ls -l neural-nets
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: wildbg
+
+      - name: Build wildbg for WebAssembly
+        working-directory: wildbg
+        run: cargo build --release --package wildbg-wasm --target wasm32-unknown-unknown
+
+      - name: Install the matching wasm-bindgen
+        run: |
+          VER=$(grep -A1 '^name = "wasm-bindgen"$' wildbg/Cargo.lock | sed -n 's/version = "\(.*\)"/\1/p')
+          echo "wasm-bindgen $VER"
+          cargo install wasm-bindgen-cli --version "$VER" --locked
+
+      - name: Generate browser bindings into the site
+        run: |
+          mkdir -p public/backgammon/wildbg
+          wasm-bindgen --target web --no-typescript --out-dir public/backgammon/wildbg \
+            wildbg/target/wasm32-unknown-unknown/release/wildbg_wasm.wasm
+          cp wildbg/LICENSE-MIT wildbg/LICENSE-APACHE public/backgammon/wildbg/
+          echo "### wildbg build" >> "$GITHUB_STEP_SUMMARY"
+          for f in public/backgammon/wildbg/*; do
+            echo "- $(basename "$f"): $(stat -c%s "$f") bytes, $(gzip -9 -c "$f" | wc -c) gzipped" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Deploy to Cloudflare
+        if: ${{ env.CF_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+      - name: Note when deploy is skipped
+        if: ${{ env.CF_TOKEN == '' }}
+        run: echo "No CLOUDFLARE_API_TOKEN secret yet, so the site was built but not deployed." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: public

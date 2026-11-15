@@ -854,7 +854,7 @@ function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;
   const pos=S.posHist||[],ph=S.pipHist||[[167,167]];
   if(botAvailable&&pos.some(e=>!evalCache.has(posKey(e))))fillEvals(pos);
-  const scale=Math.max(20,...ph.map(([w,b])=>Math.abs(w-b)));
+  const scale=Math.max(20,...pos.map(e=>{const at={pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}};return Math.abs(pips(at,"w")-pips(at,"b"))}));
   const atBottom=box.scrollTop+box.clientHeight>=box.scrollHeight-4;
   box.innerHTML="";
   const head=document.createElement("div");head.className="pc-line pc-hdr";
@@ -862,7 +862,8 @@ function renderPipChart(){
   box.append(head);
   if(!pos.length){const e=document.createElement("div");e.className="pc-empty";e.textContent=t("pcNone");box.append(e)}
   pos.forEach((e,i)=>{
-    const pr=ph[i+1]||[pips({pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}},"w"),pips({pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}},"b")];
+    // pips come from this line's own saved position, so a missing turn can't shift the numbers
+    const at={pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}},pr=[pips(at,"w"),pips(at,"b")];
     const lead=pr[1]-pr[0];   // positive: White ahead (fewer pips to go)
     const mover=e.win?e.win:opp(e.t);
     const row=document.createElement("div");row.className="pc-line"+(i===pos.length-1?" now":"");

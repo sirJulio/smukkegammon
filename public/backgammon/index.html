@@ -68,7 +68,8 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .pc-b{background:var(--cb);border-radius:0 2px 2px 0}
 .pc-row.now{outline:1px solid var(--glow);outline-offset:-1px}
 #board{flex:1;min-width:0}
-@media (max-width:820px){.pipchart{display:none}}
+@media (max-width:820px){.pipchart,#trackerBtn{display:none}}
+.no-tracker .pipchart{display:none}
 .stage{display:flex;gap:10px;position:relative;flex:1 1 auto;min-height:180px}
 /* One-screen layout: the page fills the window and the board scales to whatever space is left. */
 html,body{height:100%}
@@ -147,7 +148,7 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
       </div>
     </div>
   </div>
-  <div class="status msgrow"><span class="pill"><span data-t="room">Room</span> <b id="roomCode" style="margin-left:4px"></b></span><button id="scoresBtn" class="pill" style="cursor:pointer;border:0" data-t="scoresBtn">Scoreboard</button><span id="msg">Loading the table…</span><button id="invite" data-t="invite">Copy invite link</button></div>
+  <div class="status msgrow"><span class="pill"><span data-t="room">Room</span> <b id="roomCode" style="margin-left:4px"></b></span><button id="scoresBtn" class="pill" style="cursor:pointer;border:0" data-t="scoresBtn">Scoreboard</button><button id="trackerBtn" class="pill" style="cursor:pointer;border:0" aria-pressed="true">Hide tracker</button><span id="msg">Loading the table…</span><button id="invite" data-t="invite">Copy invite link</button></div>
   <div class="controls">
     <button id="roll" class="primary">Roll dice</button>
     <button id="undo" data-t="undo">Undo move</button>
@@ -236,7 +237,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -262,7 +263,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -290,7 +291,7 @@ function applyStatic(){
   document.title=t("title");
   document.getElementById("langBtn").textContent=lang==="da"?"DA · EN":"EN · DA";
 }
-function setLang(l){lang=l;try{localStorage.setItem("bg-lang",l)}catch(e){}document.getElementById("langPick").hidden=true;applyStatic();render();if(!myName)askName()}
+function setLang(l){lang=l;try{localStorage.setItem("bg-lang",l)}catch(e){}document.getElementById("langPick").hidden=true;applyStatic();applyTracker();render();if(!myName)askName()}
 
 function mine(c){return mode==="ai"?c==="w":(local||S.seats[c]===me)}
 
@@ -973,6 +974,13 @@ document.getElementById("nameForm").addEventListener("submit",e=>{e.preventDefau
 document.getElementById("scoresBtn").onclick=openScores;
 document.getElementById("scoresClose").onclick=()=>{document.getElementById("scores").hidden=true};
 document.getElementById("nameChange").onclick=()=>{document.getElementById("scores").hidden=true;askName()};
+let trackerOn=(()=>{try{return localStorage.getItem("bg-tracker")!=="off"}catch(e){return true}})();
+function applyTracker(){
+  document.body.classList.toggle("no-tracker",!trackerOn);
+  const b=document.getElementById("trackerBtn");b.textContent=t(trackerOn?"hideTracker":"showTracker");b.setAttribute("aria-pressed",String(trackerOn));
+}
+document.getElementById("trackerBtn").onclick=()=>{trackerOn=!trackerOn;try{localStorage.setItem("bg-tracker",trackerOn?"on":"off")}catch(e){}applyTracker()};
+applyTracker();
 render();connect();probeWildbg();
 // ---------- New-version notice ----------
 // The build stamps BUILD and version.txt with the same commit id; when they differ, a newer page is live.

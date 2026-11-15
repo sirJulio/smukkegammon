@@ -48,7 +48,9 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .pc-head{font-weight:600;text-align:center}
 .pc-legend{display:flex;justify-content:space-between}
 .pc-bars{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;background:var(--panel);border-radius:6px;padding:4px 0;overflow:hidden}
-.pc-bars::before{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:1px dashed var(--muted);opacity:.6}
+.pc-bars>svg{position:absolute;inset:4px 0;width:100%;height:calc(100% - 8px)}
+.pc-rows{position:absolute;inset:4px 0;display:flex;flex-direction:column}.pc-rows>div{flex:1 1 0}
+.pc-note{text-align:center;font-size:.7rem}
 .pc-row{flex:1 1 0;min-height:1px;max-height:14px;display:flex}
 .pc-row>span{flex:1;display:flex;align-items:stretch;padding:.5px 0}
 .pc-row>span:first-child{justify-content:flex-end}
@@ -120,8 +122,9 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
   </div>
   <div class="stage">
     <div id="pipChart" class="pipchart" aria-label="Pip lead through the game">
-      <div class="pc-head" data-t="pipLead">Pip lead</div>
+      <div class="pc-head" data-t="winChances">Winning chances</div>
       <div class="pc-bars" id="pcBars"></div>
+      <div class="pc-note" id="pcNote" hidden></div>
       <div class="pc-legend"><span data-t="white">White</span><span data-t="black">Black</span></div>
     </div>
     <svg id="board" viewBox="0 0 540 400" role="img" aria-label="Backgammon board"></svg>
@@ -225,7 +228,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",pipLead:"Pip lead",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -251,7 +254,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -417,7 +420,10 @@ function standUp(n){
 }
 // Sitting down (or seating a bot) at a finished board starts a fresh game.
 function freshIfOver(n){if(!n.winner)return n;const f=carryRoom(n,START());f.log=[["newGame"]];return f}
-function notePips(n){n.pipHist=(n.pipHist||[[167,167]]).concat([[pips(n,"w"),pips(n,"b")]])}
+function notePips(n){
+  n.pipHist=(n.pipHist||[[167,167]]).concat([[pips(n,"w"),pips(n,"b")]]);
+  n.posHist=(n.posHist||[]).concat([{p:n.pts.slice(),bw:n.bar.w,bb:n.bar.b,ow:n.off.w,ob:n.off.b,t:opp(n.turn),win:n.winner||undefined}]);
+}
 function passTurn(n){
   notePips(n);
   n.turn=opp(n.turn);n.dice=[];n.prev=null;n.done=false;
@@ -816,22 +822,54 @@ function drawDie(x,y,v,c,op,glow){
   el("rect",{x,y,width:36,height:36,rx:6,fill:face,stroke:c==="b"?"#000":"#7d7363","stroke-width":1.2,opacity:op},svg);
   const t=el("text",{x:x+18,y:y+25,"text-anchor":"middle","font-size":20,"font-weight":700,fill:ink,opacity:op},svg);t.textContent=v;
 }
+// ---------- Winning-chances graph (like a chess engine's evaluation bar over time) ----------
+// Each finished turn stores its position in posHist; every viewer rates the positions with their own copy of wildbg.
+const evalCache=new Map();let evalPending=false;
+function posKey(e){return JSON.stringify(e)}
+function whiteWinChance(e,engine){
+  if(e.win)return e.win==="w"?1:0;
+  const st={pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}};
+  const r=engine.evaluate(toWildbg(st,e.t));   // probabilities for the player about to roll
+  const p=r.probabilities.win;
+  return e.t==="w"?p:1-p;
+}
+async function fillEvals(hist){
+  if(evalPending)return;evalPending=true;
+  try{
+    const engine=botAvailable?await loadWildbg():null;
+    if(!engine){chartNote(t("evalUnavailable"));return}
+    for(const e of hist){const k=posKey(e);if(!evalCache.has(k)){try{evalCache.set(k,whiteWinChance(e,engine))}catch(x){evalCache.set(k,null)}}}
+  }finally{evalPending=false}
+  renderPipChart();
+}
+function chartNote(txt){const n=document.getElementById("pcNote");if(n){n.textContent=txt;n.hidden=!txt}}
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;
-  const hist=(S.pipHist||[[167,167]]).slice();
-  const live=[pips(S,"w"),pips(S,"b")],last=hist[hist.length-1];
-  if(!S.winner&&(last[0]!==live[0]||last[1]!==live[1]))hist.push(live);
-  const scale=Math.max(20,...hist.map(([w,b])=>Math.abs(w-b)));
-  box.innerHTML="";
-  hist.forEach(([w,b],i)=>{
-    const lead=b-w;   // positive: White ahead (fewer pips to go)
-    const row=document.createElement("div");row.className="pc-row"+(i===hist.length-1?" now":"");
-    const L=document.createElement("span"),R=document.createElement("span");
-    const bar=document.createElement("i");bar.style.width=(Math.abs(lead)/scale*100)+"%";
-    if(lead>0){bar.className="pc-w";L.append(bar)}else if(lead<0){bar.className="pc-b";R.append(bar)}
-    row.title=(i===0?t("pcStart"):t("pcTurn",i))+": "+(lead===0?t("even"):t("ahead",name(lead>0?"w":"b"),Math.abs(lead)));
-    row.append(L,R);box.append(row);
-  });
+  const hist=[{start:1}].concat(S.posHist||[]);
+  const vals=hist.map(e=>e.start?0.5:evalCache.has(posKey(e))?evalCache.get(posKey(e)):undefined);
+  const missing=vals.some(v=>v===undefined);
+  if(missing){chartNote(botAvailable?t("evalLoading"):"");if(botAvailable)fillEvals(hist.filter(e=>!e.start))}else chartNote("");
+  // Draw what we have: x = 0 (left) means White certain to win, 100 (right) Black certain.
+  const known=vals.map(v=>v===undefined||v===null?null:v);
+  const N=Math.max(hist.length-1,1),H=N*10;
+  const pts=[];known.forEach((v,i)=>{if(v!==null)pts.push([(1-v)*100,i*10])});
+  let svgs='<svg viewBox="0 0 100 '+H+'" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true">';
+  if(pts.length>1){
+    const line=pts.map(([x,y])=>x.toFixed(2)+","+y).join(" ");
+    const first=pts[0],last=pts[pts.length-1];
+    const area="50,"+first[1]+" "+line+" 50,"+last[1];
+    svgs+='<clipPath id="pcL"><rect x="0" y="0" width="50" height="'+H+'"/></clipPath><clipPath id="pcR"><rect x="50" y="0" width="50" height="'+H+'"/></clipPath>';
+    svgs+='<polygon points="'+area+'" fill="var(--cw)" stroke="var(--cwEdge)" stroke-width="0.6" vector-effect="non-scaling-stroke" clip-path="url(#pcL)"/>';
+    svgs+='<polygon points="'+area+'" fill="var(--cb)" clip-path="url(#pcR)"/>';
+  }
+  svgs+='<line x1="50" y1="0" x2="50" y2="'+H+'" stroke="var(--muted)" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/></svg>';
+  box.innerHTML=svgs;
+  // invisible rows on top carry the hover text for each turn
+  const rows=document.createElement("div");rows.className="pc-rows";
+  hist.forEach((e,i)=>{const r=document.createElement("div");const v=known[i];
+    const who=v===null?"":v>=0.5?t("pcWin",name("w"),Math.round(v*100)):t("pcWin",name("b"),Math.round((1-v)*100));
+    r.title=(i===0?t("pcStart"):t("pcTurn",i))+(who?": "+who:"");rows.append(r)});
+  box.append(rows);
 }
 function setMsg(x){const c=S.turn;if(mode==="online"&&!S.winner&&((S.opening&&(botMine("w")||botMine("b")))||(!S.opening&&botMine(c))))x+=" "+t("botHere");if(S.auto&&S.auto[c]&&!S.winner&&!S.opening)x+=" "+t("autoOn",name(c));document.getElementById("msg").textContent=x}
 function tap(i,tg){

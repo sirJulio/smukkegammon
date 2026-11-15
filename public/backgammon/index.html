@@ -374,7 +374,7 @@ function endTurnIfDone(n,fromMove){
     n.points={single:1,gammon:2,backgammon:3}[n.kind]*cubeOf(n).value;
     n.log=[["wins",w,n.kind]];return standUp(n)}
   if(n.rem.length&&!legal(n).length){
-    if(!fromMove){n.log=[["noMoves",n.turn,n.dice[0],n.dice[1]]];n.rem=[];return passTurn(n)}
+    if(!fromMove){n.log=[["noMoves",n.turn,n.dice[0],n.dice[1]]];n.blocked={c:n.turn,dice:n.dice.slice()};n.rem=[];return passTurn(n)}
     n.rem=[]}
   if(!n.rem.length){
     if(fromMove){n.done=true;return n}
@@ -431,7 +431,7 @@ function openingRoll(c){
 function roll(){if(S.offer)return;if(S.opening){const c=myColor();if(c)openingRoll(c);return}if(S.winner||S.rem.length||S.done||!mine(S.turn))return;rollFor(S.turn)}
 function rollFor(){
   const a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);
-  let n=clone(S);n.dice=[a,b];n.rem=a===b?[a,a,a,a]:[a,b];n.prev=null;
+  let n=clone(S);n.blocked=null;n.dice=[a,b];n.rem=a===b?[a,a,a,a]:[a,b];n.prev=null;
   n.moves=n.moves||[];n.moves.push({p:n.turn,dice:[a,b],play:[]});
   n.log=[["rolled",n.turn,a,b]];
   n=endTurnIfDone(n);commit(n);
@@ -720,7 +720,9 @@ function render(){
     ["w","b"].forEach(c=>drawDie(dieAt[c],182,o[c],c,S.rem.includes(o[c])?1:.35,c===hiC));
   }else{
     S.dice.forEach((d,k)=>{const used=S.rem.length<(S.dice[0]===S.dice[1]?4:2)&&!S.rem.includes(d)||(S.dice[0]===S.dice[1]&&k>=S.rem.length);
-      drawDie((S.turn==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,"plain",used?.35:1,false)});
+      drawDie((S.turn==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,S.turn,used?.35:1,false)});
+    if(!S.dice.length&&S.blocked&&!S.winner)
+      S.blocked.dice.forEach((d,k)=>drawDie((S.blocked.c==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,S.blocked.c,.35,false));
   }
   drawCube(svg);
   // status

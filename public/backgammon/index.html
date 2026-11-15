@@ -41,6 +41,9 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .msgrow #msg{flex:1 1 auto;min-width:0;text-align:center;text-wrap:balance}
 @media (max-width:600px){.msgrow{flex-wrap:wrap}.msgrow #msg{order:-1;flex-basis:100%;text-align:left}}
 .sb{width:100%;border-collapse:collapse;text-align:left;font-variant-numeric:tabular-nums}.sb th,.sb td{padding:6px 8px;border-bottom:1px solid color-mix(in srgb,var(--muted) 30%,transparent)}.sb th{font-size:.8rem;color:var(--muted);font-weight:600}.sb .num{text-align:right}
+.update{position:fixed;left:0;right:0;top:0;z-index:30;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;
+  padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));padding-top:calc(8px + env(safe-area-inset-top,0px));
+  background:var(--panel);color:var(--fg);box-shadow:0 4px 16px rgba(0,0,0,.18);font-weight:600}
 .stage{position:relative;flex:1 1 auto;min-height:180px}
 /* One-screen layout: the page fills the window and the board scales to whatever space is left. */
 html,body{height:100%}
@@ -64,6 +67,7 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
 </style>
 </head><body>
 
+<div id="updateBar" class="update" role="status" hidden><span data-t="newVersion">A new version of SmukkeGammon is ready.</span><button id="updateBtn" class="primary" data-t="refresh">Refresh</button></div>
 <div class="wrap">
   <a class="back" href="/" data-t="allGames">← All games</a>
   <div class="status">
@@ -203,7 +207,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -229,7 +233,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -883,6 +887,18 @@ document.getElementById("scoresBtn").onclick=openScores;
 document.getElementById("scoresClose").onclick=()=>{document.getElementById("scores").hidden=true};
 document.getElementById("nameChange").onclick=()=>{document.getElementById("scores").hidden=true;askName()};
 render();connect();probeWildbg();
+// ---------- New-version notice ----------
+// The build stamps BUILD and version.txt with the same commit id; when they differ, a newer page is live.
+const BUILD="__BUILD__";
+async function checkVersion(){
+  if(BUILD.startsWith("__"))return;
+  try{const r=await fetch("./version.txt",{cache:"no-store"});if(!r.ok)return;
+    const v=(await r.text()).trim();if(v&&v!==BUILD)document.getElementById("updateBar").hidden=false}catch(e){}
+}
+document.getElementById("updateBtn").onclick=()=>location.reload();
+setInterval(checkVersion,120000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkVersion()});
+setTimeout(checkVersion,5000);
 </script>
 
 </body></html>

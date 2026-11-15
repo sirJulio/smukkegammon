@@ -81,6 +81,12 @@ jobs:
 
       - run: npm ci
 
+      - name: Stamp the build version
+        run: |
+          echo "$GITHUB_SHA" > public/backgammon/version.txt
+          sed -i "s/__BUILD__/$GITHUB_SHA/" public/backgammon/index.html
+          grep -c "$GITHUB_SHA" public/backgammon/index.html
+
       - name: Deploy to Cloudflare
         if: ${{ env.CF_TOKEN != '' }}
         env:

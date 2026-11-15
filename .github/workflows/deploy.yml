@@ -68,7 +68,7 @@ jobs:
           wasm-opt --version
           W=public/backgammon/wildbg/wildbg_wasm_bg.wasm
           echo "before wasm-opt: $(stat -c%s $W) bytes"
-          wasm-opt -Os --strip-debug --strip-producers --enable-bulk-memory --enable-nontrapping-float-to-int --enable-sign-ext --enable-mutable-globals --enable-reference-types --enable-multivalue -o $W.opt $W && mv $W.opt $W
+          wasm-opt -Oz --all-features --strip-debug --strip-producers -o $W.opt $W && mv $W.opt $W
           cp wildbg/LICENSE-MIT wildbg/LICENSE-APACHE public/backgammon/wildbg/
           echo "### wildbg build" >> "$GITHUB_STEP_SUMMARY"
           for f in public/backgammon/wildbg/*; do

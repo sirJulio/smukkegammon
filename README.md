@@ -2,7 +2,7 @@
 
 Home of SmukkeGammon (backgammon) and future games, served at games.jdunne.au.
 
-Backgammon for two players on separate devices, plus a practice mode against a built-in computer opponent. Runs on Cloudflare: the page is served as static assets, and each game room is a Durable Object that stores the board and pushes every move to both players over a WebSocket.
+Backgammon for two players on separate devices, with an optional bot opponent. Runs on Cloudflare: the page is served as static assets, and each game room is a Durable Object that stores the board and pushes every move to both players over a WebSocket.
 
 No accounts are needed. Each room has a code (for example `wombat-482`); anyone with the invite link can join that room.
 
@@ -41,7 +41,7 @@ Durable Objects with SQLite storage are available on the Workers Free plan, so t
 2. Tap **Copy invite link** and send it to your friend.
 3. Each of you taps **Sit as White** or **Sit as Black**. Your seat is remembered on that device.
 
-**Play vs computer** starts a practice game on your device only; the room's game is kept and **Back to online table** returns to it.
+To play the computer, sit at one colour and tap **Invite bot as** the other.
 
 ## Adding a game
 
@@ -67,7 +67,7 @@ then open http://localhost:8787.
 
 ## Bot opponent (wildbg)
 
-Any player or observer can tap **Invite bot as White/Black** to seat the [wildbg](https://github.com/carsten-wenderdel/wildbg) engine (MIT/Apache-2.0, by Carsten Wenderdel). The bot runs in the browser of whoever invited it, so that page has to stay open while the bot plays. The practice mode (**Play vs computer**) also uses wildbg when it is available, and falls back to the built-in strategy when it isn't.
+Any player or observer can tap **Invite bot as White/Black** to seat the [wildbg](https://github.com/carsten-wenderdel/wildbg) engine (MIT/Apache-2.0, by Carsten Wenderdel). The bot runs in the browser of whoever invited it, so that page has to stay open while the bot plays. **Auto finish** also plays with wildbg when it is loaded, and falls back to a simple race strategy when it isn't.
 
 The engine is not stored in this repo. The GitHub Action in `.github/workflows/deploy.yml` downloads wildbg (pinned to a fixed commit, using the stronger networks from its `nets` branch), compiles it to WebAssembly, and places it in `public/backgammon/wildbg/` before deploying.
 

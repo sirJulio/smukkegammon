@@ -114,7 +114,6 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
     <button id="botB" data-t="inviteB" hidden>Invite bot as Black</button>
     <button id="botX" data-t="removeBot" hidden>Remove bot</button>
     <button id="newg" data-t="newGameBtn">New game</button>
-    <button id="vsai">Play vs computer</button>
     <span id="confirm" hidden><button id="newYes" data-t="newYes">Yes, reset board</button> <button id="newNo" data-t="cancel">Cancel</button></span>
   </div>
   <p class="note" data-t="note">Tap one of your checkers, then a highlighted point (or the tray on the right to bear off). White moves anticlockwise toward the bottom-right home; Black toward the top-right. Moves save as you make them, so your friend sees them live. Send your friend the invite link to play in this room.</p>
@@ -323,15 +322,19 @@ function maybeAuto(){
   const c=S.turn;if(!(S.auto&&S.auto[c])||!mine(c))return;
   if(mode==="ai"&&c==="b")return;
   autoBusy=true;const snap=S;
-  setTimeout(()=>{
+  setTimeout(async()=>{
     autoBusy=false;
     if(S!==snap){maybeAuto();return}
     if(S.winner||!(S.auto&&S.auto[S.turn])||!mine(S.turn))return;
     if(S.done){confirmTurn(false);return}
     if(!S.rem.length){rollFor();return}
-    const plays=allPlays(S);if(!plays.length)return;
-    plays.sort((a,b)=>raceScore(b.end,c)-raceScore(a.end,c));
-    const m=plays[0].moves[0];if(m)move(m);
+    // Play the whole roll: wildbg when it's loaded, otherwise the simple race strategy.
+    autoBusy=true;
+    let moves=botAvailable?await wildbgPlay(S):null;
+    if(S!==snap){autoBusy=false;maybeAuto();return}
+    if(!moves){const plays=allPlays(S);plays.sort((a,b)=>raceScore(b.end,c)-raceScore(a.end,c));moves=plays[0]?plays[0].moves:[]}
+    for(const m of moves){await sleep(450);if(S.turn!==c||S.winner||!(S.auto&&S.auto[c]))break;move(m)}
+    autoBusy=false;maybeAuto();
   },650);
 }
 function toggleAuto(){
@@ -700,7 +703,6 @@ function render(){
   if(mode==="online"&&!sitting&&!S.winner)setMsg(T(S.log)+" "+t(S.seats.w&&S.seats.b?"watchingFull":"watchingMsg"));
   document.getElementById("sitW").hidden=mode!=="online"||!!S.seats.w||sitting;
   document.getElementById("sitB").hidden=mode!=="online"||!!S.seats.b||sitting;
-  document.getElementById("vsai").textContent=mode==="ai"?t("backOnline"):t("vsComputer");
   document.getElementById("mode").textContent=mode==="ai"?t("modePractice"):mode==="online"?(connected?t("modeOnline",(S.seats.w?1:0)+(S.seats.b?1:0),peerIds.filter(id=>id!==S.seats.w&&id!==S.seats.b).length):t("reconnecting")):t("connecting");
 }
 function drawDie(x,y,v,c,op,glow){
@@ -746,12 +748,6 @@ document.getElementById("newYes").onclick=()=>{document.getElementById("confirm"
 document.getElementById("again").onclick=()=>{aiGame++;setThinking("");const n=START();n.seats=S.seats;
   if(mode==="ai")n.log=[["practice"]];sel=null;commit(n)};
 document.getElementById("look").onclick=()=>{resultDismissed=true;render()};
-document.getElementById("vsai").onclick=()=>{
-  aiGame++;sel=null;setThinking("");
-  if(mode==="ai"){mode="online";S=onlineS?clone(onlineS):START()}
-  else{mode="ai";S=START();S.log=[["practice"]]}
-  render();
-};
 
 function send(o){if(ws&&ws.readyState===1){ws.send(JSON.stringify(o));return true}return false}
 function playerId(){try{let id=localStorage.getItem("bg-player");if(!id){id="p"+Math.random().toString(36).slice(2,12);localStorage.setItem("bg-player",id)}return id}catch(e){return "p"+Math.random().toString(36).slice(2,12)}}

@@ -104,6 +104,9 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
     <button id="undo" data-t="undo">Undo move</button>
     <button id="confirmTurn" class="primary" hidden data-t="confirmMove">Confirm move</button>
     <button id="autoBtn" hidden>Auto finish</button>
+    <button id="dbl" data-t="double" hidden>Double</button>
+    <button id="take" class="primary" data-t="take" hidden>Take</button>
+    <button id="drop" data-t="drop" hidden>Decline</button>
     <button id="sitW" data-t="sitW">Sit as White</button>
     <button id="sitB" data-t="sitB">Sit as Black</button>
     <button id="leave" data-t="leaveSeat" hidden>Leave seat</button>
@@ -119,7 +122,7 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
 
 <script>
 const START=()=>{const p=Array(24).fill(0);p[23]=2;p[12]=5;p[7]=3;p[5]=5;p[0]=-2;p[11]=-5;p[16]=-3;p[18]=-5;
-  return {pts:p,bar:{w:0,b:0},off:{w:0,b:0},turn:"w",rem:[],dice:[],seats:{w:null,b:null},winner:null,opening:{w:null,b:null},auto:{w:false,b:false},log:[["newGame"]],prev:null,
+  return {pts:p,bar:{w:0,b:0},off:{w:0,b:0},turn:"w",rem:[],dice:[],seats:{w:null,b:null},winner:null,opening:{w:null,b:null},auto:{w:false,b:false},cube:{value:1,owner:null},offer:null,log:[["newGame"]],prev:null,
     id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),started:new Date().toISOString(),moves:[]}};
 // Point numbers from the mover's own side (1 = their last point before bearing off)
 const ptFor=(c,i)=>i==="bar"?"bar":i==="off"?"off":String(c==="w"?i+1:24-i);
@@ -193,7 +196,7 @@ const STR={
   rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
-  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
@@ -219,7 +222,7 @@ const STR={
   rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
-  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
   kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
   worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
@@ -275,11 +278,13 @@ function describe(st){
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function aiTurn(){
+  if(S.offer)return;
   if(aiBusy||mode!=="ai"||S.turn!=="b"||S.winner||S.opening)return;
   aiBusy=true;const game=aiGame;
   try{
     await sleep(700);if(game!==aiGame||mode!=="ai")return;
     if(S.done){await sleep(600);if(game===aiGame&&mode==="ai")confirmTurn(true);return}
+    if(!S.rem.length&&canDouble(S,"b")&&await cubeAdvice(S,"b","double")){if(game===aiGame&&mode==="ai")offerDouble("b",true);return}
     if(!S.rem.length){rollFor("b");if(S.turn!=="b"||!S.rem.length)return}
     const plays=allPlays(S);
     if(!plays.length)return;
@@ -314,7 +319,7 @@ function isRace(st){
 function raceScore(st,c){let far=0;for(let i=0;i<24;i++){const n=cnt(st,i,c);if(n&&(c==="w"?i>5:i<18))far+=n}return -pips(st,c)+3*st.off[c]-2*far}
 let autoBusy=false;
 function maybeAuto(){
-  if(autoBusy||S.winner||S.opening)return;
+  if(autoBusy||S.winner||S.opening||S.offer)return;
   const c=S.turn;if(!(S.auto&&S.auto[c])||!mine(c))return;
   if(mode==="ai"&&c==="b")return;
   autoBusy=true;const snap=S;
@@ -334,6 +339,9 @@ function toggleAuto(){
   const n=clone(S);n.auto=Object.assign({w:false,b:false},n.auto);n.auto[c]=!n.auto[c];sel=null;commit(n);
 }
 function maybeAI(){
+  if(mode==="ai"&&S.offer&&S.offer.from==="w"&&!aiBusy){aiBusy=true;const g=aiGame;
+    setTimeout(async()=>{const take=await cubeAdvice(S,"b","take");aiBusy=false;if(g===aiGame&&mode==="ai"&&S.offer)answerDouble(take,true)},900);return}
+  if(mode==="ai"&&S.offer)return;
   if(mode==="ai"&&S.opening&&S.opening.w!=null&&S.opening.b==null&&!aiBusy){aiBusy=true;const g=aiGame;
     setTimeout(()=>{aiBusy=false;if(g===aiGame&&mode==="ai")openingRoll("b")},700);return}
   if(mode==="ai"&&S.opening)return;if(mode==="ai"&&S.turn==="b"&&!S.winner&&!aiBusy)aiTurn()}
@@ -344,7 +352,7 @@ function endTurnIfDone(n,fromMove){
     const w=n.off.w===15?"w":"b",l=opp(w);n.winner=w;n.rem=[];n.prev=null;
     let inHome=0;for(let i=0;i<24;i++)if((w==="w"?i>=18:i<=5)&&cnt(n,i,l))inHome++;
     n.kind=n.off[l]>0?"single":(n.bar[l]||inHome)?"backgammon":"gammon";
-    n.points={single:1,gammon:2,backgammon:3}[n.kind];
+    n.points={single:1,gammon:2,backgammon:3}[n.kind]*cubeOf(n).value;
     n.log=[["wins",w,n.kind]];return n}
   if(n.rem.length&&!legal(n).length){
     if(!fromMove){n.log=[["noMoves",n.turn,n.dice[0],n.dice[1]]];n.rem=[];return passTurn(n)}
@@ -393,7 +401,7 @@ function openingRoll(c){
   }
   sel=null;commit(n);
 }
-function roll(){if(S.opening){const c=myColor();if(c)openingRoll(c);return}if(S.winner||S.rem.length||S.done||!mine(S.turn))return;rollFor(S.turn)}
+function roll(){if(S.offer)return;if(S.opening){const c=myColor();if(c)openingRoll(c);return}if(S.winner||S.rem.length||S.done||!mine(S.turn))return;rollFor(S.turn)}
 function rollFor(){
   const a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);
   let n=clone(S);n.dice=[a,b];n.rem=a===b?[a,a,a,a]:[a,b];n.prev=null;
@@ -496,11 +504,15 @@ function maybeBot(){
       setTimeout(()=>{botBusy=false;if(S===snap)openingRoll(c);else maybeBot()},800);return}
     return;
   }
+  if(S.offer){const taker=opp(S.offer.from);if(!botMine(taker))return;
+    botBusy=true;const snap=S;
+    setTimeout(async()=>{const take=await cubeAdvice(S,taker,"take");botBusy=false;if(S===snap)answerDouble(take,true);else maybeBot()},900);return}
   const c=S.turn;if(!botMine(c))return;
   botBusy=true;const snap=S;
   setTimeout(async()=>{
     if(S!==snap){botBusy=false;maybeBot();return}
     if(S.done){botBusy=false;confirmTurn(true);return}
+    if(!S.rem.length&&canDouble(S,c)&&await cubeAdvice(S,c,"double")){botBusy=false;if(S===snap)offerDouble(c,true);else maybeBot();return}
     if(!S.rem.length){botBusy=false;rollFor();return}
     setThinking(t("botThinking"));
     let moves=await wildbgPlay(S);
@@ -513,6 +525,53 @@ function maybeBot(){
 }
 function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=clone(S);n.seats[c]="bot:"+me;commit(n);loadWildbg()}
 function removeBots(){const n=clone(S);["w","b"].forEach(c=>{if(isBot(c)){n.seats[c]=null;if(n.auto)n.auto[c]=false}});commit(n)}
+
+
+// ---------- Doubling cube ----------
+// cube.value starts at 1 (shown as 64); cube.owner is null (centred) or the colour that may redouble.
+// offer = {from: colour} while a double waits for an answer.
+const cubeOf=st=>st.cube||{value:1,owner:null};
+function canDouble(st,c){
+  const cb=cubeOf(st);
+  return !st.winner&&!st.opening&&!st.offer&&st.turn===c&&!st.rem.length&&!st.done&&!(st.dice&&st.dice.length)
+    &&(cb.owner===null||cb.owner===c)&&cb.value<64;
+}
+function offerDouble(c,force){
+  if(!canDouble(S,c)||(!force&&!mine(c)))return;
+  const n=clone(S);n.offer={from:c};n.log=[["doubles",c,cubeOf(S).value*2]];if(n.moves)n.moves.push({p:c,dice:[],play:["doubles to "+cubeOf(S).value*2]});sel=null;commit(n);
+}
+function answerDouble(take,force){
+  if(!S.offer)return;const from=S.offer.from,taker=opp(from);
+  if(!force&&!mine(taker))return;
+  const n=clone(S),cb=cubeOf(S);n.offer=null;
+  if(n.moves)n.moves.push({p:taker,dice:[],play:[take?"takes":"declines"]});
+  if(take){n.cube={value:cb.value*2,owner:taker};n.log=[["takes",taker,cb.value*2],["toRoll",from]]}
+  else{n.winner=from;n.kind="dropped";n.points=cb.value;n.rem=[];n.prev=null;n.log=[["drops",taker],["wins",from,"single"]]}
+  sel=null;commit(n);
+}
+// Advice for a player (bot or computer): should c double now / should c take a double from opp(c)?
+async function cubeAdvice(st,c,question){
+  const e=botAvailable?await loadWildbg():null;
+  if(e){try{
+    if(question==="double"){const r=e.cube_info(toWildbg(st,c));return !!r.should_double}
+    const r=e.cube_info(toWildbg(st,opp(c)));return !!r.should_take;
+  }catch(x){console.warn(x)}}
+  // Fallback when wildbg isn't loaded: only judge clear races by pip count.
+  const mine_=pips(st,c),theirs=pips(st,opp(c));
+  if(question==="double")return isRace(st)&&mine_*1.1<theirs&&mine_>15;
+  return !(isRace(st)&&mine_>theirs*1.22);
+}
+function drawCube(svg){
+  const cb=cubeOf(S),v=cb.value===1?64:cb.value;
+  // centred on the bar when nobody owns it; otherwise on the owner's side of the bar
+  let y=182;
+  if(cb.owner){const ownerBottom=(cb.owner==="w")!==flipped();y=ownerBottom?332:32}
+  const x=X0+6*W+BARW/2-17;
+  const g=el("g",{},svg);
+  if(S.offer)el("rect",{x:x-5,y:y-5,width:44,height:44,rx:9,fill:"var(--glow)",opacity:.7,filter:"url(#soft)"},g);
+  el("rect",{x,y,width:34,height:34,rx:5,fill:"#f3ead6",stroke:"#5a4632","stroke-width":1.5},g);
+  const t_=el("text",{x:x+17,y:y+23,"text-anchor":"middle","font-size":v>=10?14:17,"font-weight":800,fill:"#3a2a1a"},g);t_.textContent=v;
+}
 
 // ---------- drawing ----------
 const W=36,X0=10,BARW=40,TRAY=482;
@@ -585,6 +644,7 @@ function render(){
     S.dice.forEach((d,k)=>{const used=S.rem.length<(S.dice[0]===S.dice[1]?4:2)&&!S.rem.includes(d)||(S.dice[0]===S.dice[1]&&k>=S.rem.length);
       drawDie((S.turn==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,"plain",used?.35:1,false)});
   }
+  drawCube(svg);
   // status
   const turnMine=mine(S.turn);
   const L=T(S.log);setMsg(S.winner?L:(L+(S.rem.length?(turnMine?" "+t("yourMove"):" "+t("waitingFor",name(S.turn))):(turnMine?"":" "+t("waitingFor",name(S.turn))))));
@@ -625,6 +685,12 @@ function render(){
   document.getElementById("seatB").textContent=name("b")+": "+(mode==="ai"?t("seatComputer"):local?t("seatDevice"):seatTxt("b"));
   const sitting=!local&&(S.seats.w===me||S.seats.b===me);
   document.getElementById("leave").hidden=!(mode==="online"&&sitting);
+  {const myc=myColor(),taker=S.offer?opp(S.offer.from):null;
+   const iTake=!!taker&&mine(taker)&&!(mode==="ai"&&taker==="b");
+   document.getElementById("dbl").hidden=!(myc&&mine(myc)&&canDouble(S,myc)&&!(S.auto&&S.auto[myc]));
+   document.getElementById("take").hidden=!iTake;document.getElementById("drop").hidden=!iTake;
+   if(S.offer){document.getElementById("roll").disabled=true;
+     setMsg(T(S.log)+" "+(iTake?t("answerQ"):t("waitAnswer",name(taker))))}}
   const canBot=mode==="online"&&botAvailable;
   document.getElementById("botW").hidden=!(canBot&&!S.seats.w);
   document.getElementById("botB").hidden=!(canBot&&!S.seats.b);
@@ -665,6 +731,9 @@ document.getElementById("roll").onclick=roll;
 document.getElementById("undo").onclick=undo;
 document.getElementById("confirmTurn").onclick=()=>confirmTurn(false);
 document.getElementById("autoBtn").onclick=toggleAuto;
+document.getElementById("dbl").onclick=()=>offerDouble(myColor(),false);
+document.getElementById("take").onclick=()=>answerDouble(true,false);
+document.getElementById("drop").onclick=()=>answerDouble(false,false);
 document.getElementById("leave").onclick=leaveSeat;
 document.getElementById("botW").onclick=()=>inviteBot("w");
 document.getElementById("botB").onclick=()=>inviteBot("b");

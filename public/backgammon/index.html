@@ -435,6 +435,7 @@ function notePips(n){
 }
 function passTurn(n){
   notePips(n);
+  if(n.dice&&n.dice.length)n.blocked={c:n.turn,dice:n.dice.slice()};   // shown greyed until the next roll
   n.turn=opp(n.turn);n.dice=[];n.prev=null;n.done=false;
   n.log=Array.isArray(n.log)?n.log:[];
   if(shutOut(n,n.turn)&&!shutOut(n,opp(n.turn))){

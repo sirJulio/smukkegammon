@@ -42,8 +42,15 @@ jobs:
         with:
           workspaces: wildbg
 
-      - name: Build wildbg for WebAssembly
+      - name: Build wildbg for WebAssembly (optimised for size)
         working-directory: wildbg
+        env:
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: "s"
+          CARGO_PROFILE_RELEASE_LTO: "true"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
+          CARGO_PROFILE_RELEASE_STRIP: "true"
+          CARGO_PROFILE_RELEASE_DEBUG: "false"
+          CARGO_PROFILE_RELEASE_PANIC: "abort"
         run: cargo build --release --package wildbg-wasm --target wasm32-unknown-unknown
 
       - name: Install the matching wasm-bindgen
@@ -57,6 +64,11 @@ jobs:
           mkdir -p public/backgammon/wildbg
           wasm-bindgen --target web --no-typescript --out-dir public/backgammon/wildbg \
             wildbg/target/wasm32-unknown-unknown/release/wildbg_wasm.wasm
+          sudo apt-get install -y -qq binaryen >/dev/null
+          wasm-opt --version
+          W=public/backgammon/wildbg/wildbg_wasm_bg.wasm
+          echo "before wasm-opt: $(stat -c%s $W) bytes"
+          wasm-opt -Os --strip-debug --strip-producers --enable-bulk-memory --enable-nontrapping-float-to-int --enable-sign-ext --enable-mutable-globals --enable-reference-types --enable-multivalue -o $W.opt $W && mv $W.opt $W
           cp wildbg/LICENSE-MIT wildbg/LICENSE-APACHE public/backgammon/wildbg/
           echo "### wildbg build" >> "$GITHUB_STEP_SUMMARY"
           for f in public/backgammon/wildbg/*; do

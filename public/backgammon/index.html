@@ -187,7 +187,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -196,7 +196,7 @@ const STR={
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
   modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
-  youWin:"You win!",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
+  youWin:"You win!",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
@@ -213,7 +213,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -222,7 +222,7 @@ const STR={
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
   modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
-  youWin:"Du vandt!",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
+  youWin:"Du vandt!",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
   kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
   worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
   autoFinish:"Spil automatisk færdig",stopAuto:"Stop automatisk spil",autoOn:c=>"Computeren spiller løbet færdigt for "+c+".",thinking:"Computeren tænker…",compPlayed:p=>"Computeren spillede "+p+"."}
@@ -356,7 +356,7 @@ function endTurnIfDone(n,fromMove){
     let inHome=0;for(let i=0;i<24;i++)if((w==="w"?i>=18:i<=5)&&cnt(n,i,l))inHome++;
     n.kind=n.off[l]>0?"single":(n.bar[l]||inHome)?"backgammon":"gammon";
     n.points={single:1,gammon:2,backgammon:3}[n.kind]*cubeOf(n).value;
-    n.log=[["wins",w,n.kind]];return n}
+    n.log=[["wins",w,n.kind]];return standUp(n)}
   if(n.rem.length&&!legal(n).length){
     if(!fromMove){n.log=[["noMoves",n.turn,n.dice[0],n.dice[1]]];n.rem=[];return passTurn(n)}
     n.rem=[]}
@@ -371,6 +371,14 @@ function shutOut(st,c){
   for(let d=1;d<=6;d++){const i=c==="w"?24-d:d-1;if(cnt(st,i,opp(c))<2)return false}
   return true;
 }
+// When a game ends both seats are freed, so anyone in the room can sit down for the next game.
+// The finished game's seats are kept in lastSeats for the result card and the saved record.
+function standUp(n){
+  if(mode==="online"){n.lastSeats=n.seats;n.seats={w:null,b:null};n.auto={w:false,b:false}}
+  n.log=(n.log||[]).concat([["nextGame"]]);return n;
+}
+// Sitting down (or seating a bot) at a finished board starts a fresh game.
+function freshIfOver(n){if(!n.winner)return n;const f=START();f.log=[["newGame"]];return f}
 function passTurn(n){
   n.turn=opp(n.turn);n.dice=[];n.prev=null;n.done=false;
   n.log=Array.isArray(n.log)?n.log:[];
@@ -426,7 +434,8 @@ function undo(){if(!S.prev||S.winner||!mine(S.turn))return;const p=clone(S.prev)
 
 function saveRecord(n){
   if(!n.id)return;
-  const who=c=>mode==="ai"?(c==="w"?"You":"Computer"):mode==="local"?(c==="w"?"White":"Black"):(n.seats[c]===me?"You":"Friend");
+  const seatsWere=n.lastSeats||n.seats;
+  const who=c=>mode==="ai"?(c==="w"?"You":"Computer"):mode==="local"?(c==="w"?"White":"Black"):(seatsWere[c]===me?"You":String(seatsWere[c]||"").startsWith("bot:")?"wildbg bot":"Friend");
   const rec={id:n.id,started:n.started||null,finished:new Date().toISOString(),
     mode:mode==="ai"?"practice vs computer":mode==="online"?"online":"pass-and-play",
     players:{white:who("w"),black:who("b")},winner:n.winner==="w"?"white":"black",result:n.kind||"single",points:n.points||1,
@@ -526,7 +535,7 @@ function maybeBot(){
     botBusy=false;maybeBot();
   },800);
 }
-function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=clone(S);n.seats[c]="bot:"+me;commit(n);loadWildbg()}
+function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=freshIfOver(clone(S));n.seats[c]="bot:"+me;commit(n);loadWildbg()}
 function removeBots(){const n=clone(S);["w","b"].forEach(c=>{if(isBot(c)){n.seats[c]=null;if(n.auto)n.auto[c]=false}});commit(n)}
 
 
@@ -549,7 +558,7 @@ function answerDouble(take,force){
   const n=clone(S),cb=cubeOf(S);n.offer=null;
   if(n.moves)n.moves.push({p:taker,dice:[],play:[take?"takes":"declines"]});
   if(take){n.cube={value:cb.value*2,owner:taker};n.log=[["takes",taker,cb.value*2],["toRoll",from]]}
-  else{n.winner=from;n.kind="dropped";n.points=cb.value;n.rem=[];n.prev=null;n.log=[["drops",taker],["wins",from,"single"]]}
+  else{n.winner=from;n.kind="dropped";n.points=cb.value;n.rem=[];n.prev=null;n.log=[["drops",taker],["wins",from,"single"]];standUp(n)}
   sel=null;commit(n);
 }
 // Advice for a player (bot or computer): should c double now / should c take a double from opp(c)?
@@ -675,8 +684,10 @@ function render(){
   const res=document.getElementById("result");
   if(!S.winner){resultDismissed=false;res.hidden=true}
   else{
-    const w=S.winner,l=opp(w),meWon=mode!=="local"&&mine(w);
-    document.getElementById("resHead").textContent=mode==="local"?t("colourWins",name(w)):meWon?t("youWin"):mode==="ai"?t("compWins"):t("friendWins");
+    const w=S.winner,l=opp(w),was=S.lastSeats||S.seats,iPlayed=mode==="online"&&(was.w===me||was.b===me);
+    const winnerIsBot=String(was[w]||"").startsWith("bot:");
+    document.getElementById("resHead").textContent=mode!=="online"?t("colourWins",name(w))
+      :was[w]===me?t("youWin"):winnerIsBot?t("botWins"):iPlayed?t("friendWins"):t("colourWins",name(w));
     const kind=S.kind||"single",pts=S.points||1;
     const kindTxt=t("kind"+kind);
     const loser=mode==="ai"?(l==="b"?t("seatComputer"):t("You")):name(l);
@@ -699,7 +710,7 @@ function render(){
   document.getElementById("botB").hidden=!(canBot&&!S.seats.b);
   document.getElementById("botX").hidden=!(mode==="online"&&(isBot("w")||isBot("b"))&&(sitting||botMine("w")||botMine("b")));
   document.getElementById("newg").hidden=mode==="online"&&!sitting;
-  document.getElementById("again").hidden=mode==="online"&&!sitting;
+  document.getElementById("again").hidden=mode==="online";
   if(mode==="online"&&!sitting&&!S.winner)setMsg(T(S.log)+" "+t(S.seats.w&&S.seats.b?"watchingFull":"watchingMsg"));
   document.getElementById("sitW").hidden=mode!=="online"||!!S.seats.w||sitting;
   document.getElementById("sitB").hidden=mode!=="online"||!!S.seats.b||sitting;
@@ -721,7 +732,7 @@ function tap(i,tg){
   // auto-bear-off / single target convenience
   render();
 }
-function sit(c){if(!me||S.seats[c]||S.seats.w===me||S.seats.b===me)return;const n=clone(S);n.seats[c]=me;commit(n)}
+function sit(c){if(!me||S.seats[c]||S.seats.w===me||S.seats.b===me)return;const n=freshIfOver(clone(S));n.seats[c]=me;sel=null;commit(n)}
 function leaveSeat(){const c=S.seats.w===me?"w":S.seats.b===me?"b":null;if(!c)return;
   const n=clone(S);n.seats[c]=null;if(n.auto)n.auto[c]=false;sel=null;commit(n)}
 function autoSeat(){

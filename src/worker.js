@@ -58,7 +58,8 @@ export class GameRoom {
       const body = JSON.stringify(msg.state);
       if (body.length > 200000) return;
       await this.ctx.storage.put({ state: msg.state, rev: rev + 1 });
-      const out = JSON.stringify({ type: "state", state: msg.state, rev: rev + 1 });
+      const by = (ws.deserializeAttachment() || {}).player || null;
+      const out = JSON.stringify({ type: "state", state: msg.state, rev: rev + 1, by });
       for (const s of this.ctx.getWebSockets()) { try { s.send(out); } catch {} }
       return;
     }

@@ -349,7 +349,7 @@ function maybeAuto(){
     let moves=botAvailable?await wildbgPlay(S):null;
     if(S!==snap){autoBusy=false;maybeAuto();return}
     if(!moves){const plays=allPlays(S);plays.sort((a,b)=>raceScore(b.end,c)-raceScore(a.end,c));moves=plays[0]?plays[0].moves:[]}
-    for(const m of moves){await sleep(450);if(S.turn!==c||S.winner||!(S.auto&&S.auto[c]))break;move(m)}
+    for(const m of moves){await sleep(450);if(S.turn!==c||S.winner||!(S.auto&&S.auto[c]))break;if(!move(m))break}
     autoBusy=false;maybeAuto();
   },650);
 }
@@ -437,14 +437,17 @@ function rollFor(){
   n=endTurnIfDone(n);commit(n);
 }
 function move(m){
+  if(S.done||S.winner||!m)return false;
+  // Only apply a move that is legal on the board as it stands now (guards against stale or out-of-order moves).
+  const ok=legal(S).find(x=>x.s===m.s&&x.d===m.d&&x.t===m.t);
+  if(!ok){console.warn("Ignored a move that is not legal on the current board",m);render();return false}
   const hit=m.t!=="off"&&cnt(S,m.t,opp(S.turn))===1;
-  if(S.done)return;
   let n=apply(S,S.turn,m.s,m.d);n.prev=clone(S);
   if(n.moves&&n.moves.length)n.moves[n.moves.length-1].play.push(ptFor(S.turn,m.s)+"/"+ptFor(S.turn,m.t)+(hit?"*":""));
   n.log=[["rolled",S.turn,S.dice[0],S.dice[1]]];
   n=endTurnIfDone(n,true);
   if(n.winner)n.prev=null;
-  sel=null;commit(n);
+  sel=null;commit(n);return true;
 }
 function undo(){if(!S.prev||S.winner||!mine(S.turn))return;const p=clone(S.prev);p.seats=S.seats;sel=null;commit(p)}
 
@@ -467,8 +470,10 @@ async function commit(n){
   if(mode==="ai"){maybeAI();return}
   if(mode!=="online")return;
   onlineS=n;
-  if(!send({type:"set",state:n,base:rev}))setMsg(t("notSaved"));
+  if(inflight){queued=n;return}
+  if(send({type:"set",state:n,base:rev}))inflight=true;else setMsg(t("notSaved"));
 }
+let inflight=false,queued=null;
 
 
 // ---------- wildbg bot (runs in the browser of whoever invited it) ----------
@@ -547,7 +552,7 @@ function maybeBot(){
     if(S!==snap){botBusy=false;setThinking("");maybeBot();return}
     if(!moves)moves=fallbackPlay(S);
     setThinking("");
-    for(const m of moves){await sleep(550);if(S.turn!==c||S.winner)break;move(m)}
+    for(const m of moves){await sleep(550);if(S.turn!==c||S.winner)break;if(!move(m))break}
     botBusy=false;maybeBot();
   },800);
 }
@@ -842,6 +847,15 @@ function connect(){
     if(m.type==="presence"){peers=m.players.length;peerIds=m.players;render();return}
     if(m.type!=="state")return;
     rev=m.rev;
+    if(inflight){
+      if(m.conflict){inflight=false;queued=null}            // our save was refused: take the server's board below
+      else if(m.by===me){                                   // our own save confirmed
+        inflight=false;
+        if(queued){const q=queued;queued=null;if(send({type:"set",state:q,base:rev}))inflight=true}
+        return;                                             // the board on screen is already ahead of or equal to this
+      }
+      else{queued=null}                                     // someone else's change landed first; ours will be refused
+    }
     if(!m.state){const n=START();onlineS=n;send({type:"set",state:n,base:rev});if(mode==="online"){S=clone(n);render()}return}
     onlineS=m.state;
     if(mode!=="online")return;

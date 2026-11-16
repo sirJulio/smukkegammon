@@ -276,7 +276,7 @@ const STR={
   rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
-  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
@@ -302,7 +302,7 @@ const STR={
   rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
-  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
   kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
   worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
@@ -606,9 +606,10 @@ function stepsTo(st,c,s,t,depth){
   return null;
 }
 async function wildbgPlay(st){
+  if(!botAvailable)await probeWildbg();      // a failed check at page load shouldn't cripple the bot for the whole game
   if(!botAvailable)return null;
-  const c=st.turn;let res;
-  try{res=await eng("analyze",[toWildbg(st,c),st.dice[0],st.dice[1],false],0)}catch(x){console.warn(x);return null}
+  const c=st.turn;let res=null;
+  for(let i=0;i<2&&!res;i++){try{res=await eng("analyze",[toWildbg(st,c),st.dice[0],st.dice[1],false],0)}catch(x){console.warn("wildbg analyze failed",x)}}
   const best=res&&res.moves&&res.moves[0];if(!best)return null;
   let cur=st;const out=[];
   for(const step of best.play){
@@ -647,8 +648,8 @@ function maybeBot(){
     setThinking(t("botThinking"));
     let moves=await wildbgPlay(S);
     if(S!==snap){botBusy=false;setThinking("");maybeBot();return}
-    if(!moves)moves=fallbackPlay(S);
-    setThinking("");
+    if(!moves){moves=fallbackPlay(S);console.warn("bot used the backup player");setThinking(t("botFallback"));setTimeout(()=>setThinking(""),4000)}
+    else setThinking("");
     for(const m of moves){await sleep(550);if(S.turn!==c||S.winner)break;if(!move(m))break}
     botBusy=false;maybeBot();
   },800);

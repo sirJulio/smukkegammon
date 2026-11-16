@@ -278,7 +278,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",prefShow:"Show on the board",prefScore:"Scoreboard",prefTracker:"Move tracker",prefMovable:"Glow on checkers that can move",prefTargets:"Highlight where a checker can go",prefTrail:"Show the last move",prefNarrow:"Scoreboard and tracker need a wide screen.",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:p=>"Best move: "+p,nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",prefShow:"Show on the board",prefScore:"Scoreboard",prefTracker:"Move tracker",prefMovable:"Glow on checkers that can move",prefTargets:"Highlight where a checker can go",prefTrail:"Show the last move",prefNarrow:"Scoreboard and tracker need a wide screen.",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:p=>"Best move: "+p,gDeep:"Checked with a deeper search",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -304,7 +304,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",prefShow:"Vis på brættet",prefScore:"Stilling",prefTracker:"Træk-oversigt",prefMovable:"Lys på brikker, der kan flyttes",prefTargets:"Fremhæv hvor en brik kan flytte hen",prefTrail:"Vis det sidste træk",prefNarrow:"Stilling og træk-oversigt kræver en bred skærm.",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:p=>"Bedste træk: "+p,nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",prefShow:"Vis på brættet",prefScore:"Stilling",prefTracker:"Træk-oversigt",prefMovable:"Lys på brikker, der kan flyttes",prefTargets:"Fremhæv hvor en brik kan flytte hen",prefTrail:"Vis det sidste træk",prefNarrow:"Stilling og træk-oversigt kræver en bred skærm.",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:p=>"Bedste træk: "+p,gDeep:"Tjekket med en dybere søgning",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -954,7 +954,7 @@ function shareResult(kind,key,val){
 }
 function takeShared(m){
   let changed=false;
-  for(const [k,v] of Object.entries(m.grades||{}))if(!gradeCache.has(k)){gradeCache.set(k,v);changed=true}
+  for(const [k,v] of Object.entries(m.grades||{}))if(!gradeCache.has(k)||(v&&v.d&&!(gradeCache.get(k)||{}).d)){gradeCache.set(k,v);changed=true}
   for(const [k,v] of Object.entries(m.evals||{}))if(!evalCache.has(k)&&(v===null||typeof v==="number")){evalCache.set(k,v);changed=true}
   if(changed)renderPipChart();
 }
@@ -991,17 +991,17 @@ function wbNote(steps,beforeArr){
     return (st.from===25?"bar":st.from)+"/"+(st.to===0?"off":st.to)+(hit?"*":"")}).join(" ");
 }
 // The raw verdict ({n: plays, k: rank of the play made, loss, gap, best}) is language-free, so it can be shared.
-async function gradeOne(m,prio){
+async function gradeOne(m,prio,deep){
   const pos=S.posHist||[],after=pos[m.h];if(!after||!m.dice||m.dice.length!==2)return null;
   const before=m.h===0?START_POS:pos[m.h-1];if(!before)return null;
   const c=m.p,b=toWildbg(asState(before),c);
-  const res=await eng("analyzeFast",[b,m.dice[0],m.dice[1],false],prio);
+  const res=await eng(deep?"analyze":"analyzeFast",[b,m.dice[0],m.dice[1],false],prio);
   const mv=res&&res.moves||[];if(mv.length<=1)return {n:mv.length};
   const mine1=JSON.stringify(toWildbg(asState(after),c)),mine2=JSON.stringify(toWildbg(asState(after),opp(c)));
   const k=mv.findIndex(x=>{const s_=JSON.stringify(Array.from(x.position));return s_===mine1||s_===mine2});
   if(k<0)return null;
   const best=mv[0].equity,r3=x=>Math.round(x*10000)/10000;
-  return {n:mv.length,k,loss:r3(Math.abs(best-mv[k].equity)),gap:r3(Math.abs(best-mv[1].equity)),best:wbNote(mv[0].play,b)};
+  return {n:mv.length,k,loss:r3(Math.abs(best-mv[k].equity)),gap:r3(Math.abs(best-mv[1].equity)),best:wbNote(mv[0].play,b),...(deep?{d:1}:{})};
 }
 function gradeView(g){
   if(!g||typeof g!=="object")return null;
@@ -1016,7 +1016,7 @@ function gradeView(g){
   else if(loss<0.08){mark="?!";cls="g-dub";label=t("gDoubtful")}
   else if(loss<0.16){mark="?";cls="g-bad";label=t("gMistake")}
   else{mark="??";cls="g-vbad";label=t("gBlunder")}
-  return {mark,cls,tip:label+(loss<0.0005?"":". "+t("gBestWas",String(g.best||"")))};
+  return {mark,cls,tip:label+(loss<0.0005?"":". "+t("gBestWas",String(g.best||"")))+(g.d?". "+t("gDeep"):"")};
 }
 async function fillGrades(list){
   if(gradePending||!botAvailable)return;gradePending=true;let any=false;
@@ -1028,6 +1028,20 @@ async function fillGrades(list){
       if(!gradeCache.has(key)){gradeCache.set(key,g);any=true;if(g)shareResult("grades",key,g)}}));
   }finally{gradePending=false}
   if(any)renderPipChart();
+  deepCheckNewest(list);
+}
+// Second opinion on the newest move only: the deep (look-ahead) search, run after the quick grades.
+// Its verdict replaces the quick one here and in the room. Older moves keep the quick grade.
+const deepTried=new Set();
+async function deepCheckNewest(list){
+  const m=list.filter(x=>x.dice&&x.dice.length===2).pop();if(!m)return;
+  const key=gradeKey(m),g=key&&gradeCache.get(key);
+  if(!g||g.d||g.n<=1||deepTried.has(key))return;deepTried.add(key);
+  await pause(400+Math.random()*1200);   // a sharing viewer may send the deep verdict first
+  if((gradeCache.get(key)||{}).d)return;
+  let d=null;try{d=await gradeOne(m,1,true)}catch(x){return}
+  if(!d||(gradeCache.get(key)||{}).d)return;
+  gradeCache.set(key,d);shareResult("grades",key,d);renderPipChart();
 }
 function playCell(m){
   const span=document.createElement("span");span.className="pc-play";if(m)span.textContent=fmtPlay(m);return span;

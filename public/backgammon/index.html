@@ -146,6 +146,16 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
       <div class="controls" style="justify-content:center"><button class="primary" type="submit" data-t="save">Save</button></div>
     </form>
   </div>
+  <div id="lvlPick" class="result" style="position:fixed;z-index:19" hidden>
+    <div class="card">
+      <p class="resHead" data-t="lvlTitle">How strong should the bot play?</p>
+      <div class="controls" style="justify-content:center;flex-wrap:wrap">
+        <button data-lvl="1" data-t="lvl1">Beginner</button><button data-lvl="2" data-t="lvl2">Casual</button>
+        <button data-lvl="3" data-t="lvl3">Strong</button><button data-lvl="4" class="primary" data-t="lvl4">Expert</button>
+      </div>
+      <div class="controls" style="justify-content:center"><button id="lvlCancel" data-t="cancel">Cancel</button></div>
+    </div>
+  </div>
   <div id="langPick" class="result" style="position:fixed;z-index:20" hidden>
     <div class="card">
       <p class="resHead">Language · Sprog</p>
@@ -276,7 +286,7 @@ const STR={
   rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
-  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
@@ -302,7 +312,7 @@ const STR={
   rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
-  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
   kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
   worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
@@ -605,12 +615,19 @@ function stepsTo(st,c,s,t,depth){
   }
   return null;
 }
+// Weaker levels sometimes pick a worse play: the bigger the equity loss, the less likely (softmax).
+function pickByLevel(mv,lvl){
+  if(!mv||!mv.length)return null;
+  const T=[0,0.14,0.06,0.02,0][lvl]||0;if(!T)return mv[0];
+  const top=mv.slice(0,12),w=top.map(m=>Math.exp((m.equity-top[0].equity)/T)),sum=w.reduce((a,b)=>a+b,0);
+  let r=Math.random()*sum;for(let i=0;i<top.length;i++){r-=w[i];if(r<=0)return top[i]}return top[0];
+}
 async function wildbgPlay(st){
   if(!botAvailable)await probeWildbg();      // a failed check at page load shouldn't cripple the bot for the whole game
   if(!botAvailable)return null;
   const c=st.turn;let res=null;
-  for(let i=0;i<2&&!res;i++){try{res=await eng("analyze",[toWildbg(st,c),st.dice[0],st.dice[1],false],0)}catch(x){console.warn("wildbg analyze failed",x)}}
-  const best=res&&res.moves&&res.moves[0];if(!best)return null;
+  for(let i=0;i<2&&!res;i++){try{res=await eng(botLevelOf(S.seats[c])<=2?"analyzeFast":"analyze",[toWildbg(st,c),st.dice[0],st.dice[1],false],0)}catch(x){console.warn("wildbg analyze failed",x)}}
+  const best=pickByLevel(res&&res.moves,botLevelOf(S.seats[c]));if(!best)return null;
   let cur=st;const out=[];
   for(const step of best.play){
     const seq=stepsTo(cur,c,fromWb(step.from,c),fromWb(step.to,c),0);
@@ -620,7 +637,10 @@ async function wildbgPlay(st){
   return out;
 }
 const isBot=c=>typeof S.seats[c]==="string"&&S.seats[c].startsWith("bot:");
-const botMine=c=>isBot(c)&&S.seats[c]==="bot:"+me;
+const botMine=c=>isBot(c)&&S.seats[c].split("#")[0]==="bot:"+me;
+// Bot strength 1-4 (Beginner, Casual, Strong, Expert); old seats without a level play at full strength.
+const botLevelOf=id=>{const m=/#(\d)$/.exec(String(id||""));return m?+m[1]:4};
+const botLabel=id=>t("seatBot")+" · "+t("lvl"+botLevelOf(id));
 let botBusy=false;
 function fallbackPlay(st){
   const ps=allPlays(st);const c=st.turn;
@@ -643,7 +663,7 @@ function maybeBot(){
   setTimeout(async()=>{
     if(S!==snap){botBusy=false;maybeBot();return}
     if(S.done){botBusy=false;confirmTurn(true);return}
-    if(!S.rem.length&&canDouble(S,c)&&await cubeAdvice(S,c,"double")){botBusy=false;if(S===snap)offerDouble(c,true);else maybeBot();return}
+    if(!S.rem.length&&canDouble(S,c)&&botLevelOf(S.seats[c])>=3&&await cubeAdvice(S,c,"double")){botBusy=false;if(S===snap)offerDouble(c,true);else maybeBot();return}
     if(!S.rem.length){botBusy=false;rollFor();return}
     setThinking(t("botThinking"));
     let moves=await wildbgPlay(S);
@@ -654,7 +674,9 @@ function maybeBot(){
     botBusy=false;maybeBot();
   },800);
 }
-function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=freshIfOver(clone(S));n.seats[c]="bot:"+me;commit(n);engStart()}
+let lvlFor=null;
+function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;lvlFor=c;document.getElementById("lvlPick").hidden=false;engStart()}
+function seatBot(c,lvl){if(mode!=="online"||S.seats[c]||!me)return;const n=freshIfOver(clone(S));n.seats[c]="bot:"+me+"#"+lvl;commit(n)}
 function removeBots(){const n=clone(S);["w","b"].forEach(c=>{if(isBot(c)){n.seats[c]=null;if(n.auto)n.auto[c]=false}});commit(n)}
 
 
@@ -707,10 +729,10 @@ function drawCube(svg){
 // ---------- Player names and the room scoreboard ----------
 // Names live on each device; the room keeps names (by player id) and running scores in its shared state.
 let myName=(()=>{try{return localStorage.getItem("bg-name")||""}catch(e){return ""}})();
-const scoreKey=id=>String(id||"").startsWith("bot:")?"bot":id;
+const scoreKey=id=>{id=String(id||"");if(!id.startsWith("bot:"))return id;const l=botLevelOf(id);return l===4?"bot":"bot"+l};
 function nameOf(id){
   if(!id)return "";
-  if(scoreKey(id)==="bot")return t("seatBot");
+  if(String(id).startsWith("bot:"))return botLabel(id);
   if(id===me&&myName)return myName;
   return (S.names&&S.names[id])||t("guest");
 }
@@ -720,7 +742,7 @@ function withMyName(n){if(me&&myName){n.names=Object.assign({},n.names);n.names[
 function award(n){
   const w=n.winner,l=opp(w),sc=n.scores=Object.assign({},n.scores);
   const add=(id,won)=>{if(!id)return;const k=scoreKey(id),r=Object.assign({pts:0,won:0,played:0},sc[k]);
-    r.played++;if(won){r.won++;r.pts+=n.points||1}r.name=k==="bot"?"wildbg bot":(n.names&&n.names[id])||r.name||"";sc[k]=r};
+    r.played++;if(won){r.won++;r.pts+=n.points||1}r.name=k.startsWith("bot")&&String(id).startsWith("bot:")?"wildbg bot "+botLevelOf(id):(n.names&&n.names[id])||r.name||"";sc[k]=r};
   add(n.seats[w],true);add(n.seats[l],false);
 }
 function fillScores(){
@@ -728,7 +750,7 @@ function fillScores(){
   const tb=document.getElementById("scoreRows");tb.innerHTML="";
   if(!rows.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=4;td.textContent=t("noScores");tr.append(td);tb.append(tr)}
   rows.forEach(([k,r],i)=>{const tr=document.createElement("tr");
-    const cells=[(i+1)+". "+(k==="bot"?t("seatBot"):(k===me&&myName?myName:r.name||t("guest")))+(k===me?" ("+t("seatYou")+")":""),r.pts,r.won,r.played];
+    const cells=[(i+1)+". "+(k==="bot"?botLabel("bot:#4"):/^bot\d$/.test(k)?botLabel("bot:#"+k.slice(3)):(k===me&&myName?myName:r.name||t("guest")))+(k===me?" ("+t("seatYou")+")":""),r.pts,r.won,r.played];
     cells.forEach((v,j)=>{const td=document.createElement("td");td.textContent=v;if(j)td.className="num";tr.append(td)});tb.append(tr)});
 }
 function askName(){
@@ -887,7 +909,7 @@ function render(){
     document.getElementById("resSub").textContent=kindTxt+t("worth",pts)+t("boreOff",loser,S.off[l]);
     res.hidden=resultDismissed;
   }
-  const seatTxt=c=>isBot(c)?t("seatBot")+(botMine(c)?" ("+t("thisDevice")+")":""):S.seats[c]?(nameOf(S.seats[c])+(S.seats[c]===me&&!local?" ("+t("seatYou")+")":"")):t("seatOpen");
+  const seatTxt=c=>isBot(c)?botLabel(S.seats[c])+(botMine(c)?" ("+t("thisDevice")+")":""):S.seats[c]?(nameOf(S.seats[c])+(S.seats[c]===me&&!local?" ("+t("seatYou")+")":"")):t("seatOpen");
   document.getElementById("seatW").textContent=name("w")+": "+(mode==="ai"?t("seatYou"):local?t("seatDevice"):seatTxt("w"));
   document.getElementById("seatB").textContent=name("b")+": "+(mode==="ai"?t("seatComputer"):local?t("seatDevice"):seatTxt("b"));
   const sitting=!local&&(S.seats.w===me||S.seats.b===me);
@@ -1108,6 +1130,8 @@ document.getElementById("drop").onclick=()=>answerDouble(false,false);
 document.getElementById("leave").onclick=leaveSeat;
 document.getElementById("botW").onclick=()=>inviteBot("w");
 document.getElementById("botB").onclick=()=>inviteBot("b");
+document.querySelectorAll("#lvlPick [data-lvl]").forEach(b=>b.onclick=()=>{document.getElementById("lvlPick").hidden=true;if(lvlFor)seatBot(lvlFor,+b.dataset.lvl);lvlFor=null});
+document.getElementById("lvlCancel").onclick=()=>{document.getElementById("lvlPick").hidden=true;lvlFor=null};
 document.getElementById("botX").onclick=removeBots;
 document.getElementById("sitW").onclick=()=>sit("w");
 document.getElementById("sitB").onclick=()=>sit("b");

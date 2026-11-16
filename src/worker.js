@@ -43,6 +43,8 @@ export class GameRoom {
     const state = (await this.ctx.storage.get("state")) || null;
     const rev = (await this.ctx.storage.get("rev")) || 0;
     pair[1].send(JSON.stringify({ type: "state", state, rev }));
+    const analysis = (await this.ctx.storage.get("analysis")) || null;
+    if (analysis) pair[1].send(JSON.stringify({ type: "analysis", grades: analysis.grades || {}, evals: analysis.evals || {} }));
     this.broadcastPresence();
     return new Response(null, { status: 101, webSocket: pair[0] });
   }
@@ -68,6 +70,34 @@ export class GameRoom {
       const by = (ws.deserializeAttachment() || {}).player || null;
       const out = JSON.stringify({ type: "state", state: msg.state, rev: rev + 1, by });
       for (const s of this.ctx.getWebSockets()) { try { s.send(out); } catch {} }
+      return;
+    }
+    // Move grades and win chances worked out by one device, shared so the others needn't run the engine.
+    // Kept apart from the board (no rev), so they can never cause a save conflict.
+    if (msg.type === "analysis") {
+      const clean = (o) => {
+        const r = {};
+        if (!o || typeof o !== "object") return r;
+        for (const [k, v] of Object.entries(o).slice(0, 400)) {
+          if (typeof k !== "string" || k.length > 40) continue;
+          const j = JSON.stringify(v);
+          if (j && j.length <= 300) r[k] = v;
+        }
+        return r;
+      };
+      const grades = clean(msg.grades), evals = clean(msg.evals);
+      if (!Object.keys(grades).length && !Object.keys(evals).length) return;
+      const a = (await this.ctx.storage.get("analysis")) || { grades: {}, evals: {} };
+      Object.assign(a.grades, grades);
+      Object.assign(a.evals, evals);
+      // keep the store small: drop the oldest entries past 3000
+      for (const key of ["grades", "evals"]) {
+        const ks = Object.keys(a[key]);
+        if (ks.length > 3000) for (const k of ks.slice(0, ks.length - 3000)) delete a[key][k];
+      }
+      await this.ctx.storage.put("analysis", a);
+      const out = JSON.stringify({ type: "analysis", grades, evals });
+      for (const s of this.ctx.getWebSockets()) { if (s !== ws) { try { s.send(out); } catch {} } }
       return;
     }
     if (msg.type === "record" && msg.rec && typeof msg.rec === "object") {

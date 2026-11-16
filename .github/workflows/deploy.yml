@@ -42,6 +42,9 @@ jobs:
         with:
           workspaces: wildbg
 
+      - name: Add the fast one-ply engine
+        run: python3 scripts/add_fast_engine.py wildbg/crates/wildbg-wasm/src/lib.rs
+
       - name: Build wildbg for WebAssembly (optimised for size)
         working-directory: wildbg
         env:

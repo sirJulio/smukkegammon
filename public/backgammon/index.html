@@ -561,6 +561,31 @@ async function loadWildbg(){
   try{const mod=await import("./wildbg/wildbg_wasm.js");await mod.default();wb=new mod.Wildbg();wbState="ready";return wb}
   catch(e){console.warn("wildbg could not start",e);wbState="failed";return null}
 }
+// All engine work goes to a background worker (engine-worker.js), so the board never freezes.
+// prio 0 = bot move / cube, 1 = newest analysis, 2 = older history. Methods ending in "Fast" are one-ply.
+let engW=null,engDead=false,engSeq=0;const engJobs=new Map();
+function engStart(){
+  if(engW||engDead)return;
+  try{engW=new Worker("./engine-worker.js",{type:"module"})}catch(e){engDead=true;return}
+  engW.onmessage=ev=>{const m=ev.data,j=engJobs.get(m.id);if(!j)return;engJobs.delete(m.id);
+    if(m.error&&String(m.error).startsWith("boot:")){engToMain();j.retry();return}
+    m.error?j.rej(new Error(m.error)):j.res(m.result)};
+  engW.onerror=e=>{console.warn("engine worker failed",e);engToMain()};
+}
+function engToMain(){   // the worker can't run here: fall back to the main thread for every waiting job
+  engDead=true;try{engW&&engW.terminate()}catch(e){}engW=null;
+  const js=[...engJobs.values()];engJobs.clear();js.forEach(j=>j.retry());
+}
+async function engMain(method,args){const e=await loadWildbg();if(!e)throw new Error("no engine");
+  const fn=method.replace(/Fast$/,"");return e[fn](...args)}
+function eng(method,args,prio){
+  engStart();
+  if(engDead)return engMain(method,args);
+  return new Promise((res,rej)=>{const id=++engSeq;
+    engJobs.set(id,{res,rej,retry:()=>engMain(method,args).then(res,rej)});
+    engW.postMessage({id,method,args,prio})});
+}
+function engDrop(prio){if(engW)engW.postMessage({drop:prio})}
 // wildbg sees the board from the mover's side: points 1-24 toward home, 25 = mover's bar, 0 = opponent's bar.
 function toWildbg(st,c){
   const a=new Array(26).fill(0);
@@ -581,9 +606,9 @@ function stepsTo(st,c,s,t,depth){
   return null;
 }
 async function wildbgPlay(st){
-  const e=await loadWildbg();if(!e)return null;
+  if(!botAvailable)return null;
   const c=st.turn;let res;
-  try{res=e.analyze(toWildbg(st,c),st.dice[0],st.dice[1],false)}catch(x){console.warn(x);return null}
+  try{res=await eng("analyze",[toWildbg(st,c),st.dice[0],st.dice[1],false],0)}catch(x){console.warn(x);return null}
   const best=res&&res.moves&&res.moves[0];if(!best)return null;
   let cur=st;const out=[];
   for(const step of best.play){
@@ -628,7 +653,7 @@ function maybeBot(){
     botBusy=false;maybeBot();
   },800);
 }
-function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=freshIfOver(clone(S));n.seats[c]="bot:"+me;commit(n);loadWildbg()}
+function inviteBot(c){if(mode!=="online"||S.seats[c]||!me)return;const n=freshIfOver(clone(S));n.seats[c]="bot:"+me;commit(n);engStart()}
 function removeBots(){const n=clone(S);["w","b"].forEach(c=>{if(isBot(c)){n.seats[c]=null;if(n.auto)n.auto[c]=false}});commit(n)}
 
 
@@ -656,10 +681,9 @@ function answerDouble(take,force){
 }
 // Advice for a player (bot or computer): should c double now / should c take a double from opp(c)?
 async function cubeAdvice(st,c,question){
-  const e=botAvailable?await loadWildbg():null;
-  if(e){try{
-    if(question==="double"){const r=e.cube_info(toWildbg(st,c));return !!r.should_double}
-    const r=e.cube_info(toWildbg(st,opp(c)));return !!r.should_take;
+  if(botAvailable){try{
+    if(question==="double"){const r=await eng("cube_info",[toWildbg(st,c)],0);return !!r.should_double}
+    const r=await eng("cube_info",[toWildbg(st,opp(c))],0);return !!r.should_take;
   }catch(x){console.warn(x)}}
   // Fallback when wildbg isn't loaded: only judge clear races by pip count.
   const mine_=pips(st,c),theirs=pips(st,opp(c));
@@ -893,47 +917,74 @@ function drawDie(x,y,v,c,op,glow){
 }
 // ---------- Move-by-move tracker: one line per turn with the pip lead and winning chances ----------
 const evalCache=new Map();let evalPending=false;
-const posKey=e=>JSON.stringify(e);
-function whiteWinChance(e,engine){
+// Short stable key for a position or play, so results can be shared through the room cheaply.
+function hkey(str){let h1=0x811c9dc5,h2=0x1000193;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);
+  h1=Math.imul(h1^c,16777619);h2=Math.imul(h2+c,2246822519)^(h2>>>13)}
+  return (h1>>>0).toString(36)+(h2>>>0).toString(36)}
+const posKey=e=>hkey(JSON.stringify(e));
+// Results this device worked out, waiting to be sent to the room for the other viewers.
+let shareOut={grades:{},evals:{}},shareTimer=null;
+function shareResult(kind,key,val){
+  if(mode!=="online")return;shareOut[kind][key]=val;
+  if(!shareTimer)shareTimer=setTimeout(()=>{shareTimer=null;const o=shareOut;shareOut={grades:{},evals:{}};
+    if(Object.keys(o.grades).length||Object.keys(o.evals).length)send({type:"analysis",grades:o.grades,evals:o.evals})},1200);
+}
+function takeShared(m){
+  let changed=false;
+  for(const [k,v] of Object.entries(m.grades||{}))if(!gradeCache.has(k)){gradeCache.set(k,v);changed=true}
+  for(const [k,v] of Object.entries(m.evals||{}))if(!evalCache.has(k)&&(v===null||typeof v==="number")){evalCache.set(k,v);changed=true}
+  if(changed)renderPipChart();
+}
+async function whiteWinChance(e,prio){
   if(e.win)return e.win==="w"?1:0;
   const st={pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}};
-  const p=engine.evaluate(toWildbg(st,e.t)).probabilities.win;   // for the player about to roll
+  const r=await eng("evaluateFast",[toWildbg(st,e.t)],prio);   // for the player about to roll
+  const p=r.probabilities.win;
   return e.t==="w"?p:1-p;
 }
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function fillEvals(hist){
-  if(evalPending)return;evalPending=true;let ok=true;
+  if(evalPending||!botAvailable)return;evalPending=true;let any=false;
   try{
-    const engine=botAvailable?await loadWildbg():null;
-    if(!engine){ok=false;return}
-    for(const e of hist){const k=posKey(e);if(!evalCache.has(k)){try{evalCache.set(k,whiteWinChance(e,engine))}catch(x){evalCache.set(k,null)}}}
+    // wait a moment: another viewer may already be working these out and share them
+    await pause(400+Math.random()*1200);
+    const todo=hist.filter(e=>!evalCache.has(posKey(e))).reverse();   // newest first
+    await Promise.all(todo.map(async(e,i)=>{const k=posKey(e);if(evalCache.has(k))return;
+      let v=null;try{v=await whiteWinChance(e,i<4?1:2)}catch(x){if(String(x.message)==="dropped")return}
+      if(!evalCache.has(k)){evalCache.set(k,v);any=true;if(v!==null)shareResult("evals",k,Math.round(v*1000)/1000)}}));
   }finally{evalPending=false}
-  if(ok)renderPipChart();
+  if(any)renderPipChart();
 }
 // ---------- Move grades: wildbg checks each play against every legal alternative ----------
 // Equity is the expected result of a money game (+1 = a sure single win). Thresholds follow the usual
 // analysis-program idea: grade by how much equity the play gave up compared with the best play.
 const gradeCache=new Map();let gradePending=false;
 const START_POS=(()=>{const s0=START();return {p:s0.pts,bw:0,bb:0,ow:0,ob:0}})();
-function gradeKey(m){return m.h===undefined?null:JSON.stringify([m.p,m.dice,m.h,(S.posHist||[])[m.h]])}
+function gradeKey(m){return m.h===undefined?null:hkey(JSON.stringify([m.p,m.dice,m.h,(S.posHist||[])[m.h]]))}
 const asState=e=>({pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}});
 function wbNote(steps,beforeArr){
   const a=beforeArr.slice();
   return steps.map(st=>{const hit=st.to>0&&a[st.to]===-1;a[st.from]--;if(st.to>0){if(hit)a[st.to]=0;a[st.to]++}
     return (st.from===25?"bar":st.from)+"/"+(st.to===0?"off":st.to)+(hit?"*":"")}).join(" ");
 }
-function gradeOne(m,engine){
+// The raw verdict ({n: plays, k: rank of the play made, loss, gap, best}) is language-free, so it can be shared.
+async function gradeOne(m,prio){
   const pos=S.posHist||[],after=pos[m.h];if(!after||!m.dice||m.dice.length!==2)return null;
   const before=m.h===0?START_POS:pos[m.h-1];if(!before)return null;
   const c=m.p,b=toWildbg(asState(before),c);
-  const res=engine.analyze(b,m.dice[0],m.dice[1],false);
-  const mv=res&&res.moves||[];if(mv.length<=1)return {mark:"□",cls:"g-forced",tip:t("gForced")};
+  const res=await eng("analyzeFast",[b,m.dice[0],m.dice[1],false],prio);
+  const mv=res&&res.moves||[];if(mv.length<=1)return {n:mv.length};
   const mine1=JSON.stringify(toWildbg(asState(after),c)),mine2=JSON.stringify(toWildbg(asState(after),opp(c)));
   const k=mv.findIndex(x=>{const s_=JSON.stringify(Array.from(x.position));return s_===mine1||s_===mine2});
   if(k<0)return null;
-  const best=mv[0].equity,loss=Math.abs(best-mv[k].equity),gap=mv.length>1?Math.abs(best-mv[1].equity):0;
-  const bestTxt=wbNote(mv[0].play,b),lossTxt=loss.toFixed(3);
-  let mark,cls,label;
-  if(k===0||loss<0.0005){
+  const best=mv[0].equity,r3=x=>Math.round(x*10000)/10000;
+  return {n:mv.length,k,loss:r3(Math.abs(best-mv[k].equity)),gap:r3(Math.abs(best-mv[1].equity)),best:wbNote(mv[0].play,b)};
+}
+function gradeView(g){
+  if(!g||typeof g!=="object")return null;
+  if(g.n<=1)return {mark:"□",cls:"g-forced",tip:t("gForced")};
+  const loss=+g.loss||0,gap=+g.gap||0;let mark,cls,label;
+  if(g.k===0||loss<0.0005){
     if(gap>=0.16){mark="!!";cls="g-top";label=t("gBrilliant")}
     else if(gap>=0.04){mark="!";cls="g-top";label=t("gGreat")}
     else{mark="★";cls="g-top";label=t("gBest")}
@@ -942,19 +993,18 @@ function gradeOne(m,engine){
   else if(loss<0.08){mark="?!";cls="g-dub";label=t("gDoubtful")}
   else if(loss<0.16){mark="?";cls="g-bad";label=t("gMistake")}
   else{mark="??";cls="g-vbad";label=t("gBlunder")}
-  const tip=label+(loss<0.0005?"":". "+t("gBestWas",bestTxt));
-  return {mark,cls,tip};
+  return {mark,cls,tip:label+(loss<0.0005?"":". "+t("gBestWas",String(g.best||"")))};
 }
 async function fillGrades(list){
-  if(gradePending)return;gradePending=true;let ok=false;
+  if(gradePending||!botAvailable)return;gradePending=true;let any=false;
   try{
-    const engine=botAvailable?await loadWildbg():null;if(!engine)return;ok=true;
-    for(const m of list){const key=gradeKey(m);if(!key||gradeCache.has(key))continue;
-      try{gradeCache.set(key,gradeOne(m,engine))}catch(x){gradeCache.set(key,null)}
-      await new Promise(r=>setTimeout(r,0));   // keep the page responsive while grading a long game
-    }
+    await pause(400+Math.random()*1200);   // give a sharing viewer the chance to answer first
+    const todo=list.filter(m=>{const k=gradeKey(m);return k&&!gradeCache.has(k)&&m.dice&&m.dice.length===2}).reverse();
+    await Promise.all(todo.map(async(m,i)=>{const key=gradeKey(m);if(gradeCache.has(key))return;
+      let g=null;try{g=await gradeOne(m,i<2?1:2)}catch(x){if(String(x.message)==="dropped")return}
+      if(!gradeCache.has(key)){gradeCache.set(key,g);any=true;if(g)shareResult("grades",key,g)}}));
   }finally{gradePending=false}
-  if(ok)renderPipChart();
+  if(any)renderPipChart();
 }
 function playCell(m){
   const span=document.createElement("span");span.className="pc-play";if(m)span.textContent=fmtPlay(m);return span;
@@ -963,7 +1013,7 @@ function gradeCell(m){
   const span=document.createElement("span");span.className="pc-grade";if(!m)return span;
   const key=gradeKey(m);
   if(key&&m.dice&&m.dice.length===2){
-    if(gradeCache.has(key)){const g=gradeCache.get(key);
+    if(gradeCache.has(key)){const g=gradeView(gradeCache.get(key));
       if(g){span.textContent=g.mark;span.className="pc-grade g "+g.cls;span.title=g.tip;span.tabIndex=0;span.setAttribute("aria-label",g.tip)}}
     else if(botAvailable)fillGrades((S.moves||[]).filter(x=>x.h!==undefined));
   }
@@ -1086,6 +1136,7 @@ function connect(){
   ws.onopen=()=>{retry=0;connected=true;send({type:"hello",player:me,name:myName});if(mode!=="ai")mode="online";render()};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
     if(m.type==="presence"){peers=m.players.length;peerIds=m.players;render();return}
+    if(m.type==="analysis"){takeShared(m);return}
     if(m.type!=="state")return;
     rev=m.rev;
     if(inflight){

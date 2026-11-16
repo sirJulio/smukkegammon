@@ -462,7 +462,7 @@ function openingRoll(c){
   else if(o.w===o.b){n.log=[["tie",d]];n.tieRoll=d;n.opening={w:null,b:null}}
   else{
     const first=o.w>o.b?"w":"b",hi=Math.max(o.w,o.b),lo=Math.min(o.w,o.b);
-    n.openRoll={w:o.w,b:o.b};n.opening=null;n.turn=first;n.dice=[hi,lo];n.rem=[hi,lo];n.prev=null;n.done=false;
+    n.openRoll={w:o.w,b:o.b};n.opening=null;n.turn=first;n.trail={c:first,steps:[]};n.dice=[hi,lo];n.rem=[hi,lo];n.prev=null;n.done=false;
     n.moves=n.moves||[];n.moves.push({p:first,dice:[hi,lo],play:[]});
     n.log=[["openDone",o.w,o.b,first,hi,lo]];
   }
@@ -471,7 +471,7 @@ function openingRoll(c){
 function roll(){if(S.offer)return;if(S.opening){const c=myColor();if(c)openingRoll(c);return}if(S.winner||S.rem.length||S.done||!mine(S.turn))return;rollFor(S.turn)}
 function rollFor(){
   const a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);
-  let n=clone(S);n.blocked=null;n.dice=[a,b];n.rem=a===b?[a,a,a,a]:[a,b];n.prev=null;
+  let n=clone(S);n.blocked=null;n.trail={c:n.turn,steps:[]};n.dice=[a,b];n.rem=a===b?[a,a,a,a]:[a,b];n.prev=null;
   n.moves=n.moves||[];n.moves.push({p:n.turn,dice:[a,b],play:[]});
   n.log=[["rolled",n.turn,a,b]];
   n=endTurnIfDone(n);commit(n);
@@ -483,6 +483,7 @@ function move(m){
   if(!ok){console.warn("Ignored a move that is not legal on the current board",m);render();return false}
   const hit=m.t!=="off"&&cnt(S,m.t,opp(S.turn))===1;
   let n=apply(S,S.turn,m.s,m.d);n.prev=clone(S);
+  if(n.trail&&n.trail.c===S.turn)n.trail={c:S.turn,steps:n.trail.steps.concat([{s:m.s,t:m.t,hit}])};
   if(n.moves&&n.moves.length)n.moves[n.moves.length-1].play.push(ptFor(S.turn,m.s)+"/"+ptFor(S.turn,m.t)+(hit?"*":""));
   n.log=[["rolled",S.turn,S.dice[0],S.dice[1]]];
   n=endTurnIfDone(n,true);
@@ -707,6 +708,31 @@ function checker(g,cx,cy,c,label,hl){
   el("circle",{cx,cy,r:15,fill:c==="w"?"var(--cw)":"var(--cb)",stroke:c==="w"?"var(--cwEdge)":"var(--cbEdge)","stroke-width":1.5},g);
   if(label){const t=el("text",{x:cx,y:cy+5,"text-anchor":"middle","font-size":14,"font-weight":700,fill:c==="w"?"#1f1f22":"#f6f1e6"},g);t.textContent=label}
 }
+// The last turn's moves, shown until the next roll: a faint ghost where each checker started,
+// an arrow to where it went, and a ring around where it landed.
+function drawTrail(svg){
+  const tr=S.trail;if(!tr||!tr.steps||!tr.steps.length||S.opening)return;
+  const c=tr.c,g=el("g",{"pointer-events":"none"},svg);
+  const stackY=(i,k)=>{const p=pos(i);k=Math.max(0,Math.min(k,4));return p.top?30+k*30:370-k*30};
+  const barY=col=>col==="b"?(flipped()?250:150):(flipped()?150:250);
+  const trayY=col=>(flipped()?{w:70,b:330}:{b:70,w:330})[col];
+  const from=x=>x==="bar"?[X0+6*W+BARW/2,barY(c)]:[pos(x).x+W/2,stackY(x,cnt(S,x,c))];
+  const to=x=>x==="off"?[TRAY+24,trayY(c)]:[pos(x).x+W/2,stackY(x,Math.abs(S.pts[x])-1)];
+  const marks=new Set();
+  tr.steps.forEach(st=>{
+    const [x1,y1]=from(st.s),[x2,y2]=to(st.t);
+    if(st.s!=="bar"&&!marks.has("s"+st.s)){marks.add("s"+st.s);
+      el("circle",{cx:x1,cy:y1,r:14,fill:c==="w"?"var(--cw)":"var(--cb)",opacity:.28,stroke:"var(--glow)","stroke-width":1.5,"stroke-dasharray":"3 3"},g)}
+    // gently curved arrow, bowed towards the middle of the board
+    const mx=(x1+x2)/2,my=(y1+y2)/2+(Math.abs(x2-x1)>40?(my0=>my0<200?40:-40)((y1+y2)/2):0);
+    const ang=Math.atan2(y2-my,x2-mx),ex=x2-Math.cos(ang)*16,ey=y2-Math.sin(ang)*16;
+    el("path",{d:`M${x1},${y1} Q${mx},${my} ${ex},${ey}`,fill:"none",stroke:"var(--glow)","stroke-width":2.5,opacity:.85,"stroke-linecap":"round"},g);
+    const ah=7,a1=ang+2.6,a2=ang-2.6;
+    el("polygon",{points:`${ex+Math.cos(ang)*4},${ey+Math.sin(ang)*4} ${ex+Math.cos(a1)*ah},${ey+Math.sin(a1)*ah} ${ex+Math.cos(a2)*ah},${ey+Math.sin(a2)*ah}`,fill:"var(--glow)",opacity:.9},g);
+    if(st.t!=="off"&&!marks.has("t"+st.t)){marks.add("t"+st.t);el("circle",{cx:x2,cy:y2,r:17,fill:"none",stroke:"var(--glow)","stroke-width":2,opacity:.9},g)}
+    if(st.hit){const hx=X0+6*W+BARW/2,hy=barY(opp(c));el("circle",{cx:hx,cy:hy,r:17,fill:"none",stroke:"var(--glow)","stroke-width":2,"stroke-dasharray":"4 3",opacity:.9},g)}
+  });
+}
 function render(){
   const svg=document.getElementById("board");svg.innerHTML="";
   const lg=legal(S), can=!S.winner&&S.rem.length&&mine(S.turn);
@@ -746,6 +772,7 @@ function render(){
   (flipped()?[["w",70],["b",330]]:[["b",70],["w",330]]).forEach(([c,y])=>{el("rect",{x:TRAY+8,y:y-12,width:32,height:24,rx:4,fill:c==="w"?"var(--cw)":"var(--cb)"},tg);
     const t=el("text",{x:TRAY+24,y:y+5,"text-anchor":"middle","font-size":13,"font-weight":700,fill:c==="w"?"#1f1f22":"#f6f1e6"},tg);t.textContent=S.off[c]});
   tg.addEventListener("click",()=>offT&&move(offT));
+  drawTrail(svg);
   // dice
   // During the opening each colour rolls its own die: White's die is white, Black's is black.
   const dieAt={w:X0+6*W+BARW+96,b:X0+96};

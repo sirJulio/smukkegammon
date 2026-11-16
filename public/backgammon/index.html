@@ -12,12 +12,12 @@ body{margin:0;font-size:14px}
   --bg:#eef0ec; --fg:#1d2420; --muted:#5d6a62; --panel:#ffffff;
   --felt:#2f5d4a; --wood:#6b4426; --pa:#c9a46a; --pb:#8a3b2e;
   --cw:#f6f1e6; --cwEdge:#a89c86; --cb:#1f1f22; --cbEdge:#000;
-  --hi:#f2c84b; --glow:#ffe9a8; --accent:#2f5d4a;
+  --hi:#f2c84b; --glow:#ffe9a8; --gTop:#2e7d4f; --gDub:#a7741b; --gBad:#c2571a; --gVbad:#b3261e; --accent:#2f5d4a;
   --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--gTop:#6fcf97; --gDub:#e0b04a; --gBad:#f08a4b; --gVbad:#ff6b6b;
   --bg:#141917; --fg:#e7ece8; --muted:#9aa79f; --panel:#1e2421; --accent:#6fb393; color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#141917; --fg:#e7ece8; --muted:#9aa79f; --panel:#1e2421; --accent:#6fb393; color-scheme:dark}
+:root[data-theme="dark"]{--gTop:#6fcf97; --gDub:#e0b04a; --gBad:#f08a4b; --gVbad:#ff6b6b; --bg:#141917; --fg:#e7ece8; --muted:#9aa79f; --panel:#1e2421; --accent:#6fb393; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
 .wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:8px;height:100%}
@@ -56,6 +56,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .pc-dot{width:8px;height:8px;border-radius:50%;display:inline-block}.pc-dot.w{background:var(--cw);border:1px solid var(--cwEdge)}.pc-dot.b{background:var(--cb)}
 .pc-val,.pc-pct{text-align:right;white-space:nowrap}
 .pc-play{min-width:0;overflow-wrap:anywhere}
+.g{font-weight:800}.g-top{color:var(--gTop)}.g-dub{color:var(--gDub)}.g-bad{color:var(--gBad)}.g-vbad{color:var(--gVbad)}
 .pc-val{display:flex;align-items:center;gap:4px}.pc-val>b{font-weight:500;min-width:18px;text-align:right}.pc-val>.pc-barcell{flex:1;margin-top:1px}
 .pc-barcell{position:relative;height:11px}.pc-barcell::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px dashed var(--muted);opacity:.6}
 .pc-barcell>i{position:absolute;top:0;bottom:0}
@@ -239,7 +240,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:(p,l)=>"wildbg prefers "+p+" (this play gave up "+l+" equity)",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -265,7 +266,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:(p,l)=>"wildbg foretrækker "+p+" (trækket kostede "+l+" i equity)",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -880,6 +881,64 @@ async function fillEvals(hist){
   }finally{evalPending=false}
   if(ok)renderPipChart();
 }
+// ---------- Move grades: wildbg checks each play against every legal alternative ----------
+// Equity is the expected result of a money game (+1 = a sure single win). Thresholds follow the usual
+// analysis-program idea: grade by how much equity the play gave up compared with the best play.
+const gradeCache=new Map();let gradePending=false;
+const START_POS=(()=>{const s0=START();return {p:s0.pts,bw:0,bb:0,ow:0,ob:0}})();
+function gradeKey(m){return m.h===undefined?null:JSON.stringify([m.p,m.dice,m.h,(S.posHist||[])[m.h]])}
+const asState=e=>({pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}});
+function wbNote(steps,beforeArr){
+  const a=beforeArr.slice();
+  return steps.map(st=>{const hit=st.to>0&&a[st.to]===-1;a[st.from]--;if(st.to>0){if(hit)a[st.to]=0;a[st.to]++}
+    return (st.from===25?"bar":st.from)+"/"+(st.to===0?"off":st.to)+(hit?"*":"")}).join(" ");
+}
+function gradeOne(m,engine){
+  const pos=S.posHist||[],after=pos[m.h];if(!after||!m.dice||m.dice.length!==2)return null;
+  const before=m.h===0?START_POS:pos[m.h-1];if(!before)return null;
+  const c=m.p,b=toWildbg(asState(before),c);
+  const res=engine.analyze(b,m.dice[0],m.dice[1],false);
+  const mv=res&&res.moves||[];if(mv.length<=1)return {mark:"",cls:"",tip:t("gForced")};
+  const mine1=JSON.stringify(toWildbg(asState(after),c)),mine2=JSON.stringify(toWildbg(asState(after),opp(c)));
+  const k=mv.findIndex(x=>{const s_=JSON.stringify(Array.from(x.position));return s_===mine1||s_===mine2});
+  if(k<0)return null;
+  const best=mv[0].equity,loss=Math.abs(best-mv[k].equity),gap=mv.length>1?Math.abs(best-mv[1].equity):0;
+  const bestTxt=wbNote(mv[0].play,b),lossTxt=loss.toFixed(3);
+  let mark,cls,label;
+  if(k===0||loss<0.0005){
+    if(gap>=0.16){mark="!!";cls="g-top";label=t("gBrilliant")}
+    else if(gap>=0.04){mark="!";cls="g-top";label=t("gGreat")}
+    else{mark="★";cls="g-top";label=t("gBest")}
+  }
+  else if(loss<0.04){mark="";cls="";label=t("gGood")}
+  else if(loss<0.08){mark="?!";cls="g-dub";label=t("gDoubtful")}
+  else if(loss<0.16){mark="?";cls="g-bad";label=t("gMistake")}
+  else{mark="??";cls="g-vbad";label=t("gBlunder")}
+  const tip=label+(loss<0.0005?"":". "+t("gBestWas",bestTxt,lossTxt));
+  return {mark,cls,tip};
+}
+async function fillGrades(list){
+  if(gradePending)return;gradePending=true;let ok=false;
+  try{
+    const engine=botAvailable?await loadWildbg():null;if(!engine)return;ok=true;
+    for(const m of list){const key=gradeKey(m);if(!key||gradeCache.has(key))continue;
+      try{gradeCache.set(key,gradeOne(m,engine))}catch(x){gradeCache.set(key,null)}
+      await new Promise(r=>setTimeout(r,0));   // keep the page responsive while grading a long game
+    }
+  }finally{gradePending=false}
+  if(ok)renderPipChart();
+}
+function playCell(m){
+  const span=document.createElement("span");span.className="pc-play";if(!m)return span;
+  span.append(fmtPlay(m));
+  const key=gradeKey(m);
+  if(key&&m.dice&&m.dice.length===2){
+    if(gradeCache.has(key)){const g=gradeCache.get(key);
+      if(g){if(g.mark){const b_=document.createElement("b");b_.className="g "+g.cls;b_.textContent=" "+g.mark;span.append(b_)}span.title=g.tip}}
+    else if(botAvailable)fillGrades((S.moves||[]).filter(x=>x.h!==undefined));
+  }
+  return span;
+}
 let trackerRows=-1;
 // One line per move number, like a scoresheet: White's play, Black's play, then the pip lead and
 // winning chances after the later of the two. Plays use standard notation from each player's own side.
@@ -921,8 +980,7 @@ function renderPipChart(){
   lines.forEach((ln,i)=>{
     const row=document.createElement("div");row.className="pc-line"+(i===lines.length-1?" now":"");
     const num=document.createElement("span");num.className="pc-num";num.textContent=(i+1)+".";
-    const cw=document.createElement("span");cw.className="pc-play";cw.textContent=ln.w?fmtPlay(ln.w):"";
-    const cb=document.createElement("span");cb.className="pc-play";cb.textContent=ln.b?fmtPlay(ln.b):"";
+    const cw=playCell(ln.w),cb=playCell(ln.b);
     const val=document.createElement("span");val.className="pc-val";
     const win=document.createElement("span");win.className="pc-pct";
     const e=ln.h!==undefined?pos[ln.h]:null;let tip=t("pcTurn",i+1);

@@ -746,7 +746,7 @@ function award(n){
   add(n.seats[w],true);add(n.seats[l],false);
 }
 function fillScores(){
-  const rows=Object.entries(S.scores||{}).sort((a,b)=>b[1].pts-a[1].pts||b[1].won-a[1].won);
+  const rows=Object.entries(S.scores||{}).filter(([k])=>!k.startsWith("bot")).sort((a,b)=>b[1].pts-a[1].pts||b[1].won-a[1].won);
   const tb=document.getElementById("scoreRows");tb.innerHTML="";
   if(!rows.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=4;td.textContent=t("noScores");tr.append(td);tb.append(tr)}
   rows.forEach(([k,r],i)=>{const tr=document.createElement("tr");

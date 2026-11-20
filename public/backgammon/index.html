@@ -148,7 +148,22 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
   #result{grid-area:1/1/5/4}
   .wrap>.msgrow{grid-area:msg}
   .wrap>.controls{grid-area:ctrl}
-  .no-tracker .wrap{grid-template-columns:auto minmax(0,1fr) auto}
+  /* equal side columns keep the board centred; they only collapse when both side panels are switched off */
+  .wrap{grid-template-columns:232px minmax(0,1fr) 232px}
+  .no-tracker.no-score .wrap{grid-template-columns:auto minmax(0,1fr) auto}
+  /* slim tracker: half its old width; plays wrap, the pip-lead bar is dropped (the number stays) */
+  #pipChart{width:232px;min-width:0}
+  #pipChart .pc-hdr>*{white-space:nowrap;overflow:hidden}
+  /* each turn takes two lines: White's play on top, Black's below, with pips and win % on the right */
+  #pipChart .pc-line{flex:0 0 auto;grid-template-columns:18px minmax(0,1fr) 14px 34px;column-gap:3px;row-gap:1px;padding:3px 4px;font-size:.68rem}
+  #pipChart .pc-line>:nth-child(1){grid-area:1/1/3/2}
+  #pipChart .pc-line>:nth-child(2){grid-area:1/2}#pipChart .pc-line>:nth-child(3){grid-area:1/3}
+  #pipChart .pc-line>:nth-child(4){grid-area:2/2}#pipChart .pc-line>:nth-child(5){grid-area:2/3}
+  #pipChart .pc-line>:nth-child(6){grid-area:1/4}#pipChart .pc-line>:nth-child(7){grid-area:2/4}
+  #pipChart .pc-barcell{display:none}
+  #pipChart .pc-val{justify-content:flex-end}#pipChart .pc-val>b{min-width:0}
+  #pipPill{white-space:normal;max-width:232px}
+  .wrap>.status h1{font-size:clamp(1.2rem,1.6vw,1.6rem)}
 }
 @media (prefers-reduced-motion:reduce){.result .card{animation:none}}
 </style>

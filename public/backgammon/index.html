@@ -178,7 +178,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
       <div class="pc-head" data-t="pcTitle">Move tracker</div>
       <div class="pc-bars" id="pcBars"></div>
     </div>
-    <svg id="board" viewBox="0 0 540 400" role="img" aria-label="Backgammon board"></svg>
+    <svg id="board" viewBox="0 -16 540 432" role="img" aria-label="Backgammon board"></svg>
     <div id="result" class="result" role="dialog" aria-live="polite" hidden>
       <div class="card">
         <p id="resHead" class="resHead"></p>
@@ -803,13 +803,13 @@ const RICH_DEFS=`<defs>
 function drawSurface(svg){
   const fields=[[X0,10,6*W,380,0],[X0+6*W+BARW,10,6*W,380,0],[TRAY,10,48,380,4]];
   const st=prefs.board;
-  el("rect",{x:0,y:0,width:540,height:400,fill:"var(--wood)"},svg);
+  el("rect",{x:0,y:-16,width:540,height:432,fill:"var(--wood)"},svg);
   // wood grain on the frame only, under the playing fields
-  if(rich()&&st!=="modern")el("rect",{x:0,y:0,width:540,height:400,fill:"#000",filter:"url(#grain)",opacity:st==="danish"?.45:.9,"pointer-events":"none"},svg);
+  if(rich()&&st!=="modern")el("rect",{x:0,y:-16,width:540,height:432,fill:"#000",filter:"url(#grain)",opacity:st==="danish"?.45:.9,"pointer-events":"none"},svg);
   fields.forEach(([x,y,w,h,rx])=>el("rect",{x,y,width:w,height:h,rx,fill:"var(--felt)"},svg));
   if(!rich())return;
   // frame bevel and the dividing bar
-  el("rect",{x:1,y:1,width:538,height:398,rx:3,fill:"url(#bevel)",stroke:"#00000055","stroke-width":2,"pointer-events":"none"},svg);
+  el("rect",{x:1,y:-15,width:538,height:430,rx:3,fill:"url(#bevel)",stroke:"#00000055","stroke-width":2,"pointer-events":"none"},svg);
   el("rect",{x:X0+6*W+3,y:10,width:BARW-6,height:380,fill:"url(#bevel)",opacity:.8,"pointer-events":"none"},svg);
   fields.forEach(([x,y,w,h,rx])=>{
     if(st==="wood")el("rect",{x,y,width:w,height:h,rx,fill:"#000",filter:"url(#nap)",opacity:.55,"pointer-events":"none"},svg);
@@ -877,7 +877,7 @@ function render(){
       const topK=k===Math.min(n,5)-1;checker(g,p.x+W/2,cy,c,k===4&&n>5?String(n):"",topK&&sel===i?2:(topK&&sel===null&&sources.has(i)?1:0))}
     // labels go on top of the checkers so they stay readable
     if(prefs.nums!=="none"){ // point-number tags: White's number in white on a dark tag, Black's in black on a light tag
-      const ly=p.top?13:377,wT=[i+1,"#fff","#1f1f22d9"],bT=[24-i,"#111","#f6f1e6e6"];
+      const ly=p.top?-13:392,wT=[i+1,"#fff","#1f1f22d9"],bT=[24-i,"#111","#f6f1e6e6"];
       const tags=prefs.nums==="both"?[[...wT,-8],[...bT,8]]:[[...(flipped()?bT:wT),0]];
       tags.forEach(([v,ink,bgc,dx])=>{
         el("rect",{x:p.x+W/2+dx-8,y:ly,width:16,height:11,rx:3,fill:bgc,"pointer-events":"none"},g);

@@ -965,7 +965,7 @@ function render(){
   document.getElementById("pipLead").textContent=diff?t("ahead",leader,diff):t("even");
   if(mode==="ai"&&S.turn==="b"&&!S.winner)setMsg(T(S.log)+" "+t("compTurn"));
   const res=document.getElementById("result");
-  if(!S.winner){resultDismissed=false;res.hidden=true}
+  if(!S.winner){resultDismissed=false;res.hidden=true;celebrated=null}
   else{
     const w=S.winner,l=opp(w),was=S.lastSeats||S.seats,iPlayed=mode==="online"&&(was.w===me||was.b===me);
     const winnerIsBot=String(was[w]||"").startsWith("bot:");
@@ -977,6 +977,11 @@ function render(){
     const loser=mode==="ai"?(l==="b"?t("seatComputer"):t("You")):name(l);
     document.getElementById("resSub").textContent=kindTxt+t("worth",pts)+t("boreOff",loser,S.off[l]);
     res.hidden=resultDismissed;
+    // celebrate on the winner's screen (and on shared screens), once per finished game
+    const gameKey=(S.moves||[]).length+":"+w+":"+(S.points||1);
+    const iWon=mode==="online"?was[w]===me:mode==="ai"?w==="w":true;
+    if(iWon&&celebrated!==gameKey&&celebrateReady)celebrate();
+    celebrated=gameKey;
   }
   const seatTxt=c=>isBot(c)?botLabel(S.seats[c])+(botMine(c)?" ("+t("thisDevice")+")":""):S.seats[c]?(nameOf(S.seats[c])+(S.seats[c]===me&&!local?" ("+t("seatYou")+")":"")):t("seatOpen");
   document.getElementById("seatW").textContent=name("w")+": "+(mode==="ai"?t("seatYou"):local?t("seatDevice"):seatTxt("w"));
@@ -1200,6 +1205,35 @@ function maybeChime(){
   const key=waiting?(S.opening?"open":S.turn+":"+((S.moves||[]).length)):null;
   if(key&&key!==chimeKey&&chimeReady&&prefs.chime)playChime();
   chimeKey=key;chimeReady=true;
+}
+// ---------- Winner's celebration: a confetti burst, then a few fireworks, drawn on a canvas over the page ----------
+let celebrated=null,celebrateReady=false;setTimeout(()=>{celebrateReady=true},1500); // not for a game already over when the page opened
+function celebrate(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const cv=document.createElement("canvas"),dpr=Math.min(2,devicePixelRatio||1);
+  cv.style.cssText="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:40";
+  document.body.append(cv);const cx=cv.getContext("2d");
+  const size=()=>{cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cx.setTransform(dpr,0,0,dpr,0,0)};size();addEventListener("resize",size);
+  const W_=()=>innerWidth,H_=()=>innerHeight,cols=["#f2c84b","#e85d75","#4fb3e8","#7bd389","#b48cf2","#ff9f45","#ffffff"];
+  const parts=[],R=Math.random,start=performance.now();
+  // confetti bomb from just below the result card
+  for(let i=0;i<160;i++){const a=-Math.PI/2+(R()-.5)*1.9,v=7+R()*9;
+    parts.push({t:"c",x:W_()/2,y:H_()*.55,vx:Math.cos(a)*v,vy:Math.sin(a)*v,w:6+R()*6,h:3+R()*4,r:R()*6,vr:(R()-.5)*.4,c:cols[i%cols.length],life:260})}
+  const rockets=[];for(let i=0;i<7;i++)rockets.push({at:350+i*380+R()*200,x:W_()*(.12+R()*.76),ty:H_()*(.12+R()*.3),c:cols[(R()*6)|0]});
+  function burst(x,y,c){const n=55+(R()*25|0);for(let i=0;i<n;i++){const a=i/n*Math.PI*2,v=2+R()*3.2;
+    parts.push({t:"s",x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,c:R()<.25?"#fff":c,life:70+R()*30,max:100})}}
+  function frame(now){
+    const el_=now-start;cx.clearRect(0,0,W_(),H_());
+    rockets.forEach(r=>{if(!r.done&&el_>=r.at){if(r.y==null){r.y=H_();}
+      r.y-=11;cx.fillStyle=r.c;cx.fillRect(r.x-1.5,r.y,3,9);if(r.y<=r.ty){r.done=true;burst(r.x,r.y,r.c)}}});
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life--;if(p.life<=0){parts.splice(i,1);continue}
+      if(p.t==="c"){p.vy+=.22;p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+        cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.scale(1,Math.abs(Math.cos(p.r*1.7))+.15);cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore()}
+      else{p.vy+=.05;p.vx*=.97;p.vy*=.97;p.x+=p.vx;p.y+=p.vy;cx.globalAlpha=Math.max(0,p.life/p.max);cx.fillStyle=p.c;
+        cx.beginPath();cx.arc(p.x,p.y,2,0,7);cx.fill();cx.globalAlpha=1}}
+    if(parts.length||rockets.some(r=>!r.done))requestAnimationFrame(frame);else{removeEventListener("resize",size);cv.remove()}
+  }
+  requestAnimationFrame(frame);
 }
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;

@@ -268,6 +268,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
         <div class="controls" style="justify-content:center">
           <button id="again" class="primary" data-t="again">Play again</button>
           <button id="look" data-t="look">View board</button>
+          <button id="exportGame" data-t="exportGame">Export game</button>
         </div>
       </div>
     </div>
@@ -374,7 +375,7 @@ const STR={
   rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
-  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",ckAsk:"Play this game with a clock?",ckNo:"No clock",ckProposes:(n,p)=>n+" proposes a clock: "+p+".",ckAccept:"Accept",ckDecline:"Decline",ckWaiting:p=>"Waiting for your opponent to accept: "+p+".",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",exportGame:"Export game",ckAsk:"Play this game with a clock?",ckNo:"No clock",ckProposes:(n,p)=>n+" proposes a clock: "+p+".",ckAccept:"Accept",ckDecline:"Decline",ckWaiting:p=>"Waiting for your opponent to accept: "+p+".",
   ckTournament:"Tournament",ckNormal:"Online normal",ckBlitz:"Blitz",ckRelaxed:"Relaxed",ckDesc:(per,bank)=>per+" s per move + "+bank+" min bank",ckAuto:c=>c+" ran out of time, so a random legal move was played.",ckOutForfeit:"out of time loses",ckOutRandom:"out of time plays a random move",ckOut3:"3 random moves, then out of time loses",timeUp:c=>c+" ran out of time.",kindtimeout:"A win on time",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",rxTurning:"Your turning point",rxTurnTxt:(n,p,b,x)=>"Turn "+n+", you played "+p+". The bot preferred "+b+", worth about "+x+"% more winning chances.",
   tipHit:"Tip: when a hit is on offer, taking it often swings the game.",tipNoHit:"Tip: hitting isn't always right; sometimes it leaves you exposed to a return shot.",
@@ -409,7 +410,7 @@ const STR={
   rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
-  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",ckAsk:"Spil dette spil med ur?",ckNo:"Intet ur",ckProposes:(n,p)=>n+" foreslår et ur: "+p+".",ckAccept:"Accepter",ckDecline:"Afvis",ckWaiting:p=>"Venter på at modstanderen accepterer: "+p+".",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",exportGame:"Eksportér spil",ckAsk:"Spil dette spil med ur?",ckNo:"Intet ur",ckProposes:(n,p)=>n+" foreslår et ur: "+p+".",ckAccept:"Accepter",ckDecline:"Afvis",ckWaiting:p=>"Venter på at modstanderen accepterer: "+p+".",
   ckTournament:"Turnering",ckNormal:"Online normal",ckBlitz:"Lyn",ckRelaxed:"Afslappet",ckDesc:(per,bank)=>per+" sek. pr. træk + "+bank+" min. bank",ckAuto:c=>c+" løb tør for tid, så et tilfældigt lovligt træk blev spillet.",ckOutForfeit:"tiden ude taber",ckOutRandom:"tiden ude giver et tilfældigt træk",ckOut3:"3 tilfældige træk, derefter taber tiden ude",timeUp:c=>c+" løb tør for tid.",kindtimeout:"En sejr på tid",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",rxTurning:"Dit vendepunkt",rxTurnTxt:(n,p,b,x)=>"Tur "+n+", du spillede "+p+". Botten foretrak "+b+", ca. "+x+"% bedre vinderchancer.",
   tipHit:"Tip: når du kan slå en brik, vender det ofte spillet.",tipNoHit:"Tip: det er ikke altid rigtigt at slå; nogle gange står du blottet for et modslag.",
@@ -641,16 +642,26 @@ function undo(){if(!S.prev||S.winner||!mine(S.turn))return;const p=clone(S.prev)
 
 function saveRecord(n){
   if(!n.id)return;
+  send({type:"record",rec:buildRecord(n)});
+}
+function buildRecord(n,finished){
   const seatsWere=n.lastSeats||n.seats;
   const who=c=>{const id=seatsWere[c];if(mode==="ai")return c==="w"?(myName||"You"):"Computer";if(!id)return c==="w"?"White":"Black";
     return String(id).startsWith("bot:")?"wildbg bot (level "+botLevelOf(id)+")":(id===me?myName:(n.names&&n.names[id]))||"Guest"};
-  const rec={id:n.id,room,started:n.started||null,finished:new Date().toISOString(),
+  const rec={id:n.id,room,started:n.started||null,finished:finished||n.finishedAt||new Date().toISOString(),
     mode:mode==="ai"?"practice vs computer":mode==="online"?"online":"pass-and-play",
     players:{white:who("w"),black:who("b")},winner:n.winner==="w"?"white":"black",result:n.kind||"single",points:n.points||1,
     borneOff:{white:n.off.w,black:n.off.b},clock:n.clock?n.clock.preset:null,
     moves:(n.moves||[]).map(t=>(t.p==="w"?"W ":"B ")+t.dice.join("-")+": "+(t.play.length?t.play.join(" "):"no move"))};
   rec.mat=matFile(n,rec);
-  send({type:"record",rec});
+  return rec;
+}
+// "Export game": download this game's .mat file on this device
+function exportGame(){
+  if(!S.winner)return;const rec=buildRecord(S);
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([rec.mat],{type:"text/plain"}));
+  const f=new Date(rec.finished),z=x=>String(x).padStart(2,"0"),d=f.getFullYear()+"-"+z(f.getMonth()+1)+"-"+z(f.getDate())+"-"+z(f.getHours())+z(f.getMinutes());a.download="smukkegammon-"+(room||"game")+"-"+d+".mat";
+  document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
 }
 // ---------- Game log in the standard .mat format (opens in GNU Backgammon and eXtreme Gammon) ----------
 // White is player 1 (left column), Black player 2. Plays are already written from each mover's own side.
@@ -680,7 +691,7 @@ async function commit(n){
   clockAccount(n);
   const justWon=n.winner&&!S.winner;
   S=n;render();
-  if(justWon)saveRecord(n);
+  if(justWon){n.finishedAt=n.finishedAt||new Date().toISOString();saveRecord(n)}
   setTimeout(maybeAuto,0);setTimeout(maybeBot,0);
   if(mode==="ai"){maybeAI();return}
   if(mode!=="online")return;
@@ -1510,6 +1521,7 @@ function drawClockAsk(){
     btn(t("ckNo"),()=>{const n=clone(S);n.clockNo=true;commit(n)},"primary")}
   box.append(opts);
 }
+document.getElementById("exportGame").onclick=exportGame;
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;
   const pos=S.posHist||[];

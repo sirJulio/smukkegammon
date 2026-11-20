@@ -375,7 +375,7 @@ const STR={
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
   modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",ckAsk:"Play this game with a clock?",ckNo:"No clock",ckProposes:(n,p)=>n+" proposes a clock: "+p+".",ckAccept:"Accept",ckDecline:"Decline",ckWaiting:p=>"Waiting for your opponent to accept: "+p+".",
-  ckTournament:"Tournament",ckNormal:"Online normal",ckBlitz:"Blitz",ckRelaxed:"Relaxed",ckDesc:(per,bank)=>per+" s per move + "+bank+" min bank",ckAuto:c=>c+" ran out of time; the bot played their move.",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  ckTournament:"Tournament",ckNormal:"Online normal",ckBlitz:"Blitz",ckRelaxed:"Relaxed",ckDesc:(per,bank)=>per+" s per move + "+bank+" min bank",ckAuto:c=>c+" ran out of time, so a random legal move was played.",ckOutForfeit:"out of time loses",ckOutRandom:"out of time plays a random move",timeUp:c=>c+" ran out of time.",kindtimeout:"A win on time",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",rxTurning:"Your turning point",rxTurnTxt:(n,p,b,x)=>"Turn "+n+", you played "+p+". The bot preferred "+b+", worth about "+x+"% more winning chances.",
   tipHit:"Tip: when a hit is on offer, taking it often swings the game.",tipNoHit:"Tip: hitting isn't always right; sometimes it leaves you exposed to a return shot.",
   tipGeneral:"Tip: before moving, count how many rolls hit any checker you leave alone.",rxGG:"Good game",rxWellPlayed:"You played solidly; the dice decided this one.",
@@ -387,7 +387,7 @@ const STR={
   "In a pure race, the player on roll usually needs about an 8–10% pip lead to be a favourite to double.","Bots like wildbg learned the game by playing millions of games against themselves."],winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="You"?"win":"wins")+" – "+v,
   vBackgammon:"crushed them with a backgammon!",vBrink:"came back from the brink to snatch it!",vBehind:"clinched victory from behind!",
   vDominated:"dominated the whole game!",vRout:"dominated and won a gammon!",vGammon:"won big with a gammon!",vSeesaw:"won a real seesaw battle!",
-  vNailbiter:"edged out a nail-biter!",vSteady:"kept control and saw it home.",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
+  vNailbiter:"edged out a nail-biter!",vSteady:"kept control and saw it home.",vTime:"won on the clock!",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
@@ -413,7 +413,7 @@ const STR={
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
   modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",ckAsk:"Spil dette spil med ur?",ckNo:"Intet ur",ckProposes:(n,p)=>n+" foreslår et ur: "+p+".",ckAccept:"Accepter",ckDecline:"Afvis",ckWaiting:p=>"Venter på at modstanderen accepterer: "+p+".",
-  ckTournament:"Turnering",ckNormal:"Online normal",ckBlitz:"Lyn",ckRelaxed:"Afslappet",ckDesc:(per,bank)=>per+" sek. pr. træk + "+bank+" min. bank",ckAuto:c=>c+" løb tør for tid; botten spillede trækket.",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  ckTournament:"Turnering",ckNormal:"Online normal",ckBlitz:"Lyn",ckRelaxed:"Afslappet",ckDesc:(per,bank)=>per+" sek. pr. træk + "+bank+" min. bank",ckAuto:c=>c+" løb tør for tid, så et tilfældigt lovligt træk blev spillet.",ckOutForfeit:"tiden ude taber",ckOutRandom:"tiden ude giver et tilfældigt træk",timeUp:c=>c+" løb tør for tid.",kindtimeout:"En sejr på tid",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",rxTurning:"Dit vendepunkt",rxTurnTxt:(n,p,b,x)=>"Tur "+n+", du spillede "+p+". Botten foretrak "+b+", ca. "+x+"% bedre vinderchancer.",
   tipHit:"Tip: når du kan slå en brik, vender det ofte spillet.",tipNoHit:"Tip: det er ikke altid rigtigt at slå; nogle gange står du blottet for et modslag.",
   tipGeneral:"Tip: før du flytter, så tæl hvor mange slag der rammer en brik, du lader stå alene.",rxGG:"Godt spil",rxWellPlayed:"Du spillede solidt; terningerne afgjorde det her.",
@@ -425,7 +425,7 @@ const STR={
   "I et rent kapløb skal spilleren i tur typisk føre med 8–10% i pips for at være favorit til at doble.","Botter som wildbg lærte spillet ved at spille millioner af spil mod sig selv."],winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="Du"?"vandt":"vinder")+" – "+v,
   vBackgammon:"knuste modstanderen med en backgammon!",vBrink:"kom tilbage fra randen og snuppede sejren!",vBehind:"vendte kampen og vandt bagfra!",
   vDominated:"dominerede hele spillet!",vRout:"dominerede og vandt en gammon!",vGammon:"vandt stort med en gammon!",vSeesaw:"vandt en ægte vippe-kamp!",
-  vNailbiter:"trak det længste strå i en nervepirrer!",vSteady:"holdt styr på det og bragte det hjem.",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
+  vNailbiter:"trak det længste strå i en nervepirrer!",vSteady:"holdt styr på det og bragte det hjem.",vTime:"vandt på tid!",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
   kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
   worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
   autoFinish:"Spil automatisk færdig",stopAuto:"Stop automatisk spil",autoOn:c=>"Computeren spiller løbet færdigt for "+c+".",thinking:"Computeren tænker…",compPlayed:p=>"Computeren spillede "+p+"."}
@@ -1271,6 +1271,7 @@ function sheetLines(){
 function verdict(w){
   const kind=S.kind||"single";
   if(kind==="backgammon")return "vBackgammon";
+  if(kind==="timeout")return "vTime";
   const vals=(S.posHist||[]).map(e=>evalCache.get(posKey(e))).filter(v=>typeof v==="number").map(v=>w==="w"?v:1-v);
   const lead=e=>{const at={pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}};return w==="w"?pips(at,"b")-pips(at,"w"):pips(at,"w")-pips(at,"b")};
   if(vals.length<4){ // no engine numbers: judge from the pip race instead
@@ -1400,8 +1401,10 @@ document.addEventListener("click",e=>{const w=document.getElementById("modeWrap"
 // ---------- Game clock (tournament-style delay clock) ----------
 // Each move gets free seconds; time beyond that comes out of the player's bank. When the bank is empty,
 // that player's own device lets the bot play the move for them. Both players must agree before a game.
-const CLOCKS={tournament:{per:12,bank:240,k:"ckTournament"},normal:{per:10,bank:120,k:"ckNormal"},blitz:{per:8,bank:60,k:"ckBlitz"},relaxed:{per:30,bank:300,k:"ckRelaxed"}};
-const ckLabel=id=>{const c=CLOCKS[id];return t(c.k)+" ("+t("ckDesc",c.per,c.bank/60)+")"};
+// out: what happens when the bank runs out. "forfeit" loses the game; "random" plays a random legal move (never an advantage).
+const CLOCKS={tournament:{per:12,bank:240,k:"ckTournament",out:"forfeit"},normal:{per:10,bank:120,k:"ckNormal",out:"forfeit"},
+  blitz:{per:8,bank:60,k:"ckBlitz",out:"random"},relaxed:{per:30,bank:300,k:"ckRelaxed",out:"random"}};
+const ckLabel=id=>{const c=CLOCKS[id];return t(c.k)+" ("+t("ckDesc",c.per,c.bank/60)+"; "+t(c.out==="forfeit"?"ckOutForfeit":"ckOutRandom")+")"};
 function ckRunner(st){if(!st.clock||st.winner||st.opening)return null;return st.offer?opp(st.offer.from):st.turn}
 function clockAccount(n){
   if(!n.clock)return;
@@ -1433,17 +1436,18 @@ async function clockCheck(){
   drawClock();
   const c=ckRunner(S);if(!c||ckAutoBusy||mode!=="online"||!mine(c)||isBot(c))return;
   const [free,bank]=ckLeft(c);if(free>0||bank>0)return;
-  ckAutoBusy=true;const snap=S;
+  ckAutoBusy=true;
   try{
-    if(S.offer){answerDouble(await cubeAdvice(S,c,"take"),true);return}
+    const out=(CLOCKS[S.clock.preset]||{}).out||"random";
+    if(out==="forfeit"){ // tournament rule: out of time loses the game, at the cube's value
+      const n=clone(S),w=opp(c);n.offer=null;n.winner=w;n.kind="timeout";n.points=cubeOf(S).value;n.rem=[];n.prev=null;n.done=false;
+      n.log=[["timeUp",c],["wins",w,"single"]];standUp(n);sel=null;commit(n);return}
+    if(S.offer){answerDouble(Math.random()<.5,true);return}
     if(S.done){confirmTurn(true);return}
     if(!S.rem.length){rollFor();return}
-    const full=S.dice[0]===S.dice[1]?4:2;
-    let moves=S.rem.length===full?await wildbgPlay(S):null;
-    if(S!==snap)return;
-    if(!moves)moves=fallbackPlay(S);
+    // a random legal play, one checker at a time
+    for(let i=0;i<4&&S.turn===c&&!S.winner&&S.rem.length&&!S.done;i++){const lg=legal(S);if(!lg.length)break;if(!move(lg[Math.floor(Math.random()*lg.length)]))break}
     setMsg(t("ckAuto",nameOf(S.seats[c])));
-    for(const m of moves){if(S.turn!==c||S.winner)break;if(!move(m))break}
   }finally{ckAutoBusy=false}
 }
 setInterval(clockCheck,250);

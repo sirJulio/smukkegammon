@@ -130,10 +130,10 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
         <label><input type="checkbox" data-pref="tracker"> <span data-t="prefTracker">Move tracker</span></label>
         <label><input type="checkbox" data-pref="movable"> <span data-t="prefMovable">Glow on checkers that can move</span></label>
         <label><input type="checkbox" data-pref="targets"> <span data-t="prefTargets">Highlight where a checker can go</span></label>
-        <label><input type="checkbox" data-pref="bothNums"> <span data-t="prefBothNums">Point numbers for both players</span></label>
         <label><input type="checkbox" data-pref="trail"> <span data-t="prefTrail">Show the last move</span></label>
         <p class="prefs-note" data-t="prefNarrow">Scoreboard and tracker need a wide screen.</p>
         <hr>
+        <button id="numsBtn" class="prefs-btn"><span data-t="pointNums">Point numbers</span>: <b id="numsNow"></b></button>
         <button id="styleBtn" class="prefs-btn"><span data-t="boardStyle">Board style</span>: <b id="styleNow"></b></button>
         <button id="langBtn" class="prefs-btn">Language · Sprog: <b id="langNow">English</b></button>
         <button id="nameChange" class="prefs-btn" data-t="changeName">Change my name</button>
@@ -285,7 +285,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",prefShow:"Show on the board",prefScore:"Scoreboard",prefTracker:"Move tracker",prefMovable:"Glow on checkers that can move",prefTargets:"Highlight where a checker can go",prefTrail:"Show the last move",prefNarrow:"Scoreboard and tracker need a wide screen.",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:p=>"Best move: "+p,gDeep:"Checked with a deeper search",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",prefBothNums:"Point numbers for both players",boardStyle:"Board style",bsWood:"Classic wood & felt",bsDanish:"Danish minimal",bsModern:"Modern",bsFlat:"Original (flat)",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",prefShow:"Show on the board",prefScore:"Scoreboard",prefTracker:"Move tracker",prefMovable:"Glow on checkers that can move",prefTargets:"Highlight where a checker can go",prefTrail:"Show the last move",prefNarrow:"Scoreboard and tracker need a wide screen.",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:p=>"Best move: "+p,gDeep:"Checked with a deeper search",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",pointNums:"Point numbers",pnNone:"None",pnMine:"My side only",pnBoth:"Both players",boardStyle:"Board style",bsWood:"Classic wood & felt",bsDanish:"Danish minimal",bsModern:"Modern",bsFlat:"Original (flat)",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -311,7 +311,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",prefShow:"Vis på brættet",prefScore:"Stilling",prefTracker:"Træk-oversigt",prefMovable:"Lys på brikker, der kan flyttes",prefTargets:"Fremhæv hvor en brik kan flytte hen",prefTrail:"Vis det sidste træk",prefNarrow:"Stilling og træk-oversigt kræver en bred skærm.",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:p=>"Bedste træk: "+p,gDeep:"Tjekket med en dybere søgning",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",prefBothNums:"Feltnumre for begge spillere",boardStyle:"Brætstil",bsWood:"Klassisk træ og filt",bsDanish:"Dansk minimalistisk",bsModern:"Moderne",bsFlat:"Original (flad)",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",prefShow:"Vis på brættet",prefScore:"Stilling",prefTracker:"Træk-oversigt",prefMovable:"Lys på brikker, der kan flyttes",prefTargets:"Fremhæv hvor en brik kan flytte hen",prefTrail:"Vis det sidste træk",prefNarrow:"Stilling og træk-oversigt kræver en bred skærm.",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:p=>"Bedste træk: "+p,gDeep:"Tjekket med en dybere søgning",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",pointNums:"Feltnumre",pnNone:"Ingen",pnMine:"Kun min side",pnBoth:"Begge spillere",boardStyle:"Brætstil",bsWood:"Klassisk træ og filt",bsDanish:"Dansk minimalistisk",bsModern:"Moderne",bsFlat:"Original (flad)",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -876,14 +876,13 @@ function render(){
     for(let k=0;k<Math.min(n,5);k++){const cy=p.top?30+k*30:370-k*30;
       const topK=k===Math.min(n,5)-1;checker(g,p.x+W/2,cy,c,k===4&&n>5?String(n):"",topK&&sel===i?2:(topK&&sel===null&&sources.has(i)?1:0))}
     // labels go on top of the checkers so they stay readable
-    if(prefs.bothNums){ // each player's own point number: White's in white (on a dark tag), Black's in black (on a light tag)
-      const ly=p.top?13:377;
-      [[i+1,"#fff","#1f1f22d9",-8],[24-i,"#111","#f6f1e6e6",8]].forEach(([v,ink,bgc,dx])=>{
+    if(prefs.nums!=="none"){ // point-number tags: White's number in white on a dark tag, Black's in black on a light tag
+      const ly=p.top?13:377,wT=[i+1,"#fff","#1f1f22d9"],bT=[24-i,"#111","#f6f1e6e6"];
+      const tags=prefs.nums==="both"?[[...wT,-8],[...bT,8]]:[[...(flipped()?bT:wT),0]];
+      tags.forEach(([v,ink,bgc,dx])=>{
         el("rect",{x:p.x+W/2+dx-8,y:ly,width:16,height:11,rx:3,fill:bgc,"pointer-events":"none"},g);
         const tx=el("text",{x:p.x+W/2+dx,y:ly+8.6,"text-anchor":"middle","font-size":8.5,"font-weight":700,fill:ink,"pointer-events":"none"},g);tx.textContent=v});
-    }else{
-    const lab=el("text",{x:p.x+W/2,y:p.top?24:385,"text-anchor":"middle","font-size":9,fill:"#ffffffaa"},g);
-    lab.textContent=flipped()?24-i:i+1;}
+    }
     g.addEventListener("click",()=>tap(i,tg));
   }
   // bar
@@ -1267,6 +1266,8 @@ document.getElementById("invite").onclick=async()=>{const link=location.origin+"
   catch(e){prompt(t("copyPrompt"),link)}
   setTimeout(()=>document.getElementById("invite").textContent=t("invite"),2000)};
 document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
+document.getElementById("numsBtn").onclick=e=>{e.stopPropagation();prefs.nums=NUMS[(NUMS.indexOf(prefs.nums)+1)%NUMS.length];
+  try{localStorage.setItem("bg-prefs",JSON.stringify(prefs))}catch(x){}applyPrefs();render()};
 document.getElementById("styleBtn").onclick=e=>{e.stopPropagation();prefs.board=BOARDS[(BOARDS.indexOf(prefs.board)+1)%BOARDS.length];
   try{localStorage.setItem("bg-prefs",JSON.stringify(prefs))}catch(x){}applyPrefs();render()};
 document.getElementById("langBtn").onclick=()=>{closePrefs();document.getElementById("langPick").hidden=false};
@@ -1277,7 +1278,10 @@ document.getElementById("nameForm").addEventListener("submit",e=>{e.preventDefau
 // ---------- Preferences: each viewer's own, kept on this device ----------
 function applyTracker(){applyPrefs()}
 const BOARDS=["wood","danish","modern","flat"],BLABEL={wood:"bsWood",danish:"bsDanish",modern:"bsModern",flat:"bsFlat"};
+const NUMS=["none","mine","both"],NLABEL={none:"pnNone",mine:"pnMine",both:"pnBoth"};
 function applyPrefs(){
+  if(!NUMS.includes(prefs.nums))prefs.nums=prefs.bothNums?"both":"mine";delete prefs.bothNums;
+  {const nn=document.getElementById("numsNow");if(nn)nn.textContent=t(NLABEL[prefs.nums])}
   if(!BOARDS.includes(prefs.board))prefs.board="wood";document.body.dataset.board=prefs.board;
   {const sn=document.getElementById("styleNow");if(sn)sn.textContent=t(BLABEL[prefs.board])}
   document.body.classList.toggle("no-tracker",!prefs.tracker);

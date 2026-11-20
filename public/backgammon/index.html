@@ -139,7 +139,8 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
   .wrap>.status h1{grid-area:title;margin:0}
   #pipPill{grid-area:pips;justify-self:start}
   .pipsrow>.pill:not(#pipPill){grid-area:seats;justify-self:end;white-space:normal;max-width:232px}
-  #mode{grid-area:rmode;justify-self:end;margin-left:0!important;white-space:normal;text-align:right}
+  #modeWrap{grid-area:rmode;justify-self:center}
+  #mode{justify-self:end;margin-left:0!important;white-space:normal;text-align:right}
   .gearwrap{grid-area:rtop;justify-self:end}
   #pipChart{grid-area:chart}
   #scorePanel{grid-area:score}
@@ -173,6 +174,11 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
   #pipPill{white-space:normal;max-width:232px}
   .wrap>.status h1{font-size:clamp(1.2rem,1.6vw,1.6rem)}
 }
+.modewrap{position:relative;margin-left:auto;display:inline-flex}
+.obslist{display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:26;min-width:170px;background:var(--panel);color:var(--fg);border-radius:10px;padding:8px 12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:.85rem;text-align:left}
+.obslist ul{margin:0;padding:0 0 0 16px}.obslist .none{color:var(--muted)}
+.modewrap.has-obs:hover .obslist,.modewrap.has-obs:focus-within .obslist,.modewrap.has-obs.open .obslist{display:block}
+.modewrap.has-obs #mode{cursor:pointer}
 @media (prefers-reduced-motion:reduce){.result .card{animation:none}}
 </style>
 </head><body>
@@ -182,7 +188,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
   <a class="back" href="/" data-t="allGames">← All games</a>
   <div class="status">
     <h1 data-t="title">SmukkeGammon</h1>
-    <span class="pill" id="mode" style="margin-left:auto">Connecting…</span>
+    <span class="modewrap" id="modeWrap" tabindex="0"><span class="pill" id="mode">Connecting…</span><span class="obslist" id="obsList" role="tooltip"></span></span>
     <div class="gearwrap">
       <button id="myNameTag" class="myname" title="Change my name" hidden></button>
       <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
@@ -359,7 +365,7 @@ const STR={
   rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
-  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",rxTurning:"Your turning point",rxTurnTxt:(n,p,b,x)=>"Turn "+n+", you played "+p+". The bot preferred "+b+", worth about "+x+"% more winning chances.",
   tipHit:"Tip: when a hit is on offer, taking it often swings the game.",tipNoHit:"Tip: hitting isn't always right; sometimes it leaves you exposed to a return shot.",
   tipGeneral:"Tip: before moving, count how many rolls hit any checker you leave alone.",rxGG:"Good game",rxWellPlayed:"You played solidly; the dice decided this one.",
@@ -396,7 +402,7 @@ const STR={
   rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
-  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",rxTurning:"Dit vendepunkt",rxTurnTxt:(n,p,b,x)=>"Tur "+n+", du spillede "+p+". Botten foretrak "+b+", ca. "+x+"% bedre vinderchancer.",
   tipHit:"Tip: når du kan slå en brik, vender det ofte spillet.",tipNoHit:"Tip: det er ikke altid rigtigt at slå; nogle gange står du blottet for et modslag.",
   tipGeneral:"Tip: før du flytter, så tæl hvor mange slag der rammer en brik, du lader stå alene.",rxGG:"Godt spil",rxWellPlayed:"Du spillede solidt; terningerne afgjorde det her.",
@@ -1085,6 +1091,7 @@ function render(){
   if(mode==="online"&&!sitting&&!S.winner)setMsg(T(S.log)+" "+t(S.seats.w&&S.seats.b?"watchingFull":"watchingMsg"));
   document.getElementById("sitW").hidden=mode!=="online"||!!S.seats.w||sitting;
   document.getElementById("sitB").hidden=mode!=="online"||!!S.seats.b||sitting;
+  fillObservers();
   document.getElementById("mode").textContent=mode==="ai"?t("modePractice"):mode==="online"?(connected?t("modeOnline",(S.seats.w?1:0)+(S.seats.b?1:0),peerIds.filter(id=>id!==S.seats.w&&id!==S.seats.b).length):t("reconnecting")):t("connecting");
 }
 // Grey wash over the right half of a die (used for one of the two moves a doubles die stands for).
@@ -1270,6 +1277,7 @@ function verdict(w){
   return "vSteady";
 }
 // ---------- Turn chime: a soft two-note bell when your turn starts, in case you're looking away ----------
+let peerNames={};
 let actx=null,chimeKey=null,chimeReady=false;  // no chime for the state the page opens in
 function unlockAudio(){try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true}));
@@ -1366,6 +1374,17 @@ function fitBoard(){
   wrap.style.setProperty("--bw",Math.max(200,Math.floor(Math.min(availW,availH*540/412)))+"px");
 }
 addEventListener("resize",fitBoard);
+// ---------- Observers: hover (or tap) the status pill for the names of everyone watching ----------
+function fillObservers(){
+  const wrap=document.getElementById("modeWrap"),box=document.getElementById("obsList");if(!wrap||!box)return;
+  const online=mode==="online"&&connected;wrap.classList.toggle("has-obs",online);if(!online)return;
+  const ids=peerIds.filter(id=>id!==S.seats.w&&id!==S.seats.b);box.innerHTML="";
+  if(!ids.length){const p_=document.createElement("div");p_.className="none";p_.textContent=t("obsNone");box.append(p_);return}
+  const ul=document.createElement("ul");
+  ids.forEach(id=>{const li=document.createElement("li");const n=id===me?(myName||t("guest")):(peerNames[id]||(S.names&&S.names[id])||t("guest"));
+    li.textContent=n+(id===me?" ("+t("obsYou")+")":"");ul.append(li)});box.append(ul);
+}
+document.addEventListener("click",e=>{const w=document.getElementById("modeWrap");if(!w)return;if(w.contains(e.target))w.classList.toggle("open");else w.classList.remove("open")});
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;
   const pos=S.posHist||[];
@@ -1458,7 +1477,7 @@ function connect(){
   ws=new WebSocket(proto+"//"+location.host+"/api/room/"+room+"/ws");
   ws.onopen=()=>{retry=0;connected=true;send({type:"hello",player:me,name:myName});if(mode!=="ai")mode="online";render()};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
-    if(m.type==="presence"){peers=m.players.length;peerIds=m.players;render();return}
+    if(m.type==="presence"){peers=m.players.length;peerIds=m.players;peerNames=m.names||{};render();return}
     if(m.type==="analysis"){takeShared(m);return}
     if(m.type!=="state")return;
     rev=m.rev;

@@ -53,7 +53,7 @@ export class GameRoom {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
     if (msg.type === "hello" && typeof msg.player === "string") {
-      ws.serializeAttachment({ player: msg.player.slice(0, 64) });
+      ws.serializeAttachment({ player: msg.player.slice(0, 64), name: typeof msg.name === "string" ? msg.name.slice(0, 20) : "" });
       this.broadcastPresence();
       return;
     }
@@ -114,7 +114,10 @@ export class GameRoom {
   broadcastPresence() {
     const socks = this.ctx.getWebSockets();
     const players = [...new Set(socks.map((s) => (s.deserializeAttachment() || {}).player).filter(Boolean))];
-    const out = JSON.stringify({ type: "presence", players });
+    // display names of everyone connected, so the page can list who is observing
+    const names = {};
+    for (const s of socks) { const a = s.deserializeAttachment() || {}; if (a.player && a.name) names[a.player] = a.name; }
+    const out = JSON.stringify({ type: "presence", players, names });
     for (const s of socks) { try { s.send(out); } catch {} }
   }
 }

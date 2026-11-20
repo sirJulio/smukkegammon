@@ -120,6 +120,16 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
 .wrap>.controls>*{flex:0 0 auto}
 .prefs{max-height:calc(100dvh - 90px);overflow:auto}
 @media (max-width:600px){.msgrow{min-height:0}.msgrow #msg{height:2.6em}}
+.resExtra{display:grid;gap:8px;text-align:left;font-size:.88rem}
+.resExtra:empty{display:none}
+.resExtra .rx{background:color-mix(in srgb,var(--muted) 12%,transparent);border-radius:8px;padding:8px 10px;margin:0}
+.resExtra .rx b{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px}
+.result .card{max-width:400px}
+.balloon{position:fixed;left:50%;bottom:-140px;z-index:40;pointer-events:none;text-align:center;animation:floatUp 6s ease-in forwards}
+.balloon .bl{font-size:64px;line-height:1;display:block;animation:sway 1.6s ease-in-out infinite alternate}
+.balloon .bt{display:inline-block;margin-top:2px;background:var(--panel);color:var(--fg);border-radius:999px;padding:4px 12px;font-weight:600;font-size:.9rem;box-shadow:0 4px 14px #0003}
+@keyframes floatUp{0%{transform:translate(-50%,0)}100%{transform:translate(-30%,calc(-100vh - 200px))}}
+@keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
 @media (prefers-reduced-motion:reduce){.result .card{animation:none}}
 </style>
 </head><body>
@@ -196,6 +206,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
       <div class="card">
         <p id="resHead" class="resHead"></p>
         <p id="resSub" class="resSub"></p>
+        <div id="resExtra" class="resExtra"></div>
         <div class="controls" style="justify-content:center">
           <button id="again" class="primary" data-t="again">Play again</button>
           <button id="look" data-t="look">View board</button>
@@ -306,7 +317,15 @@ const STR={
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
   modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
-  youWin:"You win!",winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="You"?"win":"wins")+" – "+v,
+  youWin:"You win!",rxTurning:"Your turning point",rxTurnTxt:(n,p,b,x)=>"Turn "+n+", you played "+p+". The bot preferred "+b+", worth about "+x+"% more winning chances.",
+  tipHit:"Tip: when a hit is on offer, taking it often swings the game.",tipNoHit:"Tip: hitting isn't always right; sometimes it leaves you exposed to a return shot.",
+  tipGeneral:"Tip: before moving, count how many rolls hit any checker you leave alone.",rxGG:"Good game",rxWellPlayed:"You played solidly; the dice decided this one.",
+  rxNextTime:"Shake it off; the next one's yours.",rxReport:"Match report",rxTurns:n=>n+" turns",rxSwings:n=>"lead changed hands "+n+(n===1?" time":" times"),
+  rxBigSwing:(n,c,x)=>"Biggest swing: turn "+n+", the chances moved "+x+" points on "+c+"'s play",rxBest:(c,n,p)=>"Best move: "+c+" on turn "+n+", "+p,rxFact:"Did you know?",
+  betterLuck:"Better luck next time!",facts:["3-1 is the best opening roll: it makes your 5-point straight away.","The doubling cube was added in 1920s New York and turned backgammon into a game of nerve as well as luck.",
+  "Backgammon is one of the oldest board games; boards over 5,000 years old have been found in Iran.","Your 5-point is the most valuable point to own early on.",
+  "Doubles come up 1 roll in 6, so about once every six of your turns.","A lone checker 6 points away from an enemy checker is the easiest to hit: 17 of the 36 rolls hit it.",
+  "In a pure race, the player on roll usually needs about an 8–10% pip lead to be a favourite to double.","Bots like wildbg learned the game by playing millions of games against themselves."],winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="You"?"win":"wins")+" – "+v,
   vBackgammon:"crushed them with a backgammon!",vBrink:"came back from the brink to snatch it!",vBehind:"clinched victory from behind!",
   vDominated:"dominated the whole game!",vRout:"dominated and won a gammon!",vGammon:"won big with a gammon!",vSeesaw:"won a real seesaw battle!",
   vNailbiter:"edged out a nail-biter!",vSteady:"kept control and saw it home.",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
@@ -335,7 +354,15 @@ const STR={
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
   modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
-  youWin:"Du vandt!",winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="Du"?"vandt":"vinder")+" – "+v,
+  youWin:"Du vandt!",rxTurning:"Dit vendepunkt",rxTurnTxt:(n,p,b,x)=>"Tur "+n+", du spillede "+p+". Botten foretrak "+b+", ca. "+x+"% bedre vinderchancer.",
+  tipHit:"Tip: når du kan slå en brik, vender det ofte spillet.",tipNoHit:"Tip: det er ikke altid rigtigt at slå; nogle gange står du blottet for et modslag.",
+  tipGeneral:"Tip: før du flytter, så tæl hvor mange slag der rammer en brik, du lader stå alene.",rxGG:"Godt spil",rxWellPlayed:"Du spillede solidt; terningerne afgjorde det her.",
+  rxNextTime:"Ryst det af dig; den næste er din.",rxReport:"Kampreferat",rxTurns:n=>n+" ture",rxSwings:n=>"føringen skiftede "+n+" gang"+(n===1?"":"e"),
+  rxBigSwing:(n,c,x)=>"Største udsving: tur "+n+", chancerne flyttede sig "+x+" point på "+c+"s træk",rxBest:(c,n,p)=>"Bedste træk: "+c+" i tur "+n+", "+p,rxFact:"Vidste du?",
+  betterLuck:"Bedre held næste gang!",facts:["3-1 er det bedste åbningsslag: det laver dit 5-felt med det samme.","Doblingsterningen kom til i 1920'ernes New York og gjorde backgammon til et spil om nerver såvel som held.",
+  "Backgammon er et af de ældste brætspil; der er fundet brætter over 5.000 år gamle i Iran.","Dit 5-felt er det mest værdifulde felt at eje tidligt i spillet.",
+  "Dobbelte slag kommer 1 gang ud af 6, altså cirka hver sjette af dine ture.","En enlig brik 6 felter fra en modstanderbrik er lettest at ramme: 17 af de 36 slag rammer den.",
+  "I et rent kapløb skal spilleren i tur typisk føre med 8–10% i pips for at være favorit til at doble.","Botter som wildbg lærte spillet ved at spille millioner af spil mod sig selv."],winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="Du"?"vandt":"vinder")+" – "+v,
   vBackgammon:"knuste modstanderen med en backgammon!",vBrink:"kom tilbage fra randen og snuppede sejren!",vBehind:"vendte kampen og vandt bagfra!",
   vDominated:"dominerede hele spillet!",vRout:"dominerede og vandt en gammon!",vGammon:"vandt stort med en gammon!",vSeesaw:"vandt en ægte vippe-kamp!",
   vNailbiter:"trak det længste strå i en nervepirrer!",vSteady:"holdt styr på det og bragte det hjem.",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
@@ -990,7 +1017,9 @@ function render(){
     // celebrate on the winner's screen (and on shared screens), once per finished game
     const gameKey=(S.moves||[]).length+":"+w+":"+(S.points||1);
     const iWon=mode==="online"?was[w]===me:mode==="ai"?w==="w":true;
-    if(iWon&&celebrated!==gameKey&&celebrateReady)celebrate();
+    const iLost=mode==="online"?was[l]===me:mode==="ai"?l==="w":false;
+    if(celebrated!==gameKey&&celebrateReady){if(iWon)celebrate();else if(iLost)consoleLoser()}
+    resultExtra(iWon?"winner":iLost?"loser":"observer",w);
     celebrated=gameKey;
   }
   const seatTxt=c=>isBot(c)?botLabel(S.seats[c])+(botMine(c)?" ("+t("thisDevice")+")":""):S.seats[c]?(nameOf(S.seats[c])+(S.seats[c]===me&&!local?" ("+t("seatYou")+")":"")):t("seatOpen");
@@ -1244,6 +1273,43 @@ function celebrate(){
     if(parts.length||rockets.some(r=>!r.done))requestAnimationFrame(frame);else{removeEventListener("resize",size);cv.remove()}
   }
   requestAnimationFrame(frame);
+}
+// ---------- Extras in the results box: a tip for the loser, a match report for everyone else, and a backgammon fact ----------
+function turnOf(m){const L=sheetLines();for(let i=0;i<L.length;i++)if(L[i].w===m||L[i].b===m)return i+1;return 0}
+function pname(c){const was=S.lastSeats||S.seats,id=was&&was[c];return !id?name(c):String(id).startsWith("bot:")?botLabel(id):nameOf(id)}
+function resultExtra(role,w){
+  const box=document.getElementById("resExtra");if(!box)return;box.innerHTML="";
+  const moves=(S.moves||[]).filter(m=>m.dice&&m.dice.length===2&&m.h!==undefined);
+  if(botAvailable&&moves.some(m=>!gradeCache.has(gradeKey(m))))fillGrades(moves);
+  const add=(h,txt)=>{const p_=document.createElement("p");p_.className="rx";const b_=document.createElement("b");b_.textContent=h;p_.append(b_,document.createTextNode(txt));box.append(p_)};
+  if(role==="loser"){
+    const l=opp(w);let worst=null,wl=0;
+    moves.filter(m=>m.p===l).forEach(m=>{const g=gradeCache.get(gradeKey(m));if(g&&typeof g==="object"&&(+g.loss||0)>wl){wl=+g.loss;worst={m,g}}});
+    if(worst&&wl>=0.04){
+      const mine=fmtPlay(worst.m),best=String(worst.g.best||"");
+      const hitMiss=best.includes("*")&&!mine.includes("*"),hitBad=mine.includes("*")&&!best.includes("*");
+      add("🫡 "+t("rxTurning"),t("rxTurnTxt",turnOf(worst.m),mine,best,Math.round(wl*100))+" "+t(hitMiss?"tipHit":hitBad?"tipNoHit":"tipGeneral"));
+    }else if(moves.some(m=>m.p===l&&gradeCache.has(gradeKey(m))))add("🫡 "+t("rxGG"),t("rxWellPlayed"));
+    else add("🫡 "+t("rxGG"),t("rxNextTime"));
+  }else if(role==="observer"){
+    const vals=(S.posHist||[]).map(e=>evalCache.get(posKey(e)));
+    let swings=0,big=0,bigAt=0,prev=null;
+    vals.forEach((v,i)=>{if(typeof v!=="number")return;if(prev!==null){if((prev-.5)*(v-.5)<0)swings++;if(Math.abs(v-prev)>big){big=Math.abs(v-prev);bigAt=i}}prev=v});
+    const turns=sheetLines().length;
+    let txt=t("rxTurns",turns)+(vals.some(v=>typeof v==="number")?" · "+t("rxSwings",swings):"");
+    if(big>=.1){const m=moves.find(x=>x.h===bigAt);if(m)txt+=". "+t("rxBigSwing",turnOf(m),pname(m.p),Math.round(big*100))}
+    const star=moves.map(m=>({m,g:gradeCache.get(gradeKey(m))})).filter(x=>x.g&&typeof x.g==="object"&&x.g.n>1&&!(+x.g.loss)&&(+x.g.gap||0)>=.04).sort((a,b)=>b.g.gap-a.g.gap)[0];
+    if(star)txt+=". "+t("rxBest",pname(star.m.p),turnOf(star.m),fmtPlay(star.m));
+    add("📋 "+t("rxReport"),txt+".");
+  }
+  const facts=t("facts");const fi=(hkey(String(S.id||S.started||""))||"0").charCodeAt(0)%facts.length; // same fact for everyone in the room
+  add("💡 "+t("rxFact"),facts[fi]);
+}
+function consoleLoser(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const d=document.createElement("div");d.className="balloon";
+  d.innerHTML='<span class="bl">🎈</span><span class="bt"></span>';d.querySelector(".bt").textContent=t("betterLuck");
+  document.body.append(d);setTimeout(()=>d.remove(),6500);
 }
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;

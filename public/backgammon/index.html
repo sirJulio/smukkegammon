@@ -149,10 +149,13 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
   .wrap>.msgrow{grid-area:msg}
   .wrap>.controls{grid-area:ctrl}
   /* equal side columns keep the board centred; they only collapse when both side panels are switched off */
-  .wrap{grid-template-columns:232px minmax(0,1fr) 232px}
-  .no-tracker.no-score .wrap{grid-template-columns:auto minmax(0,1fr) auto}
+  .wrap{max-width:none}
+  .wrap{grid-template-columns:minmax(232px,1fr) var(--bw,minmax(0,1fr)) minmax(232px,1fr)}
+  .no-tracker.no-score .wrap{grid-template-columns:0 minmax(0,1fr) 0}
   /* slim tracker: half its old width; plays wrap, the pip-lead bar is dropped (the number stays) */
-  #pipChart{width:232px;min-width:0}
+  #pipChart{width:auto;min-width:0;container-type:inline-size}
+  #scorePanel{width:232px;justify-self:center}
+  #mode,.pipsrow>.pill:not(#pipPill){justify-self:center}
   #pipChart .pc-hdr>*{white-space:nowrap;overflow:hidden}
   /* each turn takes two lines: White's play on top, Black's below, with pips and win % on the right */
   #pipChart .pc-line{flex:0 0 auto;grid-template-columns:18px minmax(0,1fr) 14px 34px;column-gap:3px;row-gap:1px;padding:3px 4px;font-size:.68rem}
@@ -161,6 +164,11 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
   #pipChart .pc-line>:nth-child(4){grid-area:2/2}#pipChart .pc-line>:nth-child(5){grid-area:2/3}
   #pipChart .pc-line>:nth-child(6){grid-area:1/4}#pipChart .pc-line>:nth-child(7){grid-area:2/4}
   #pipChart .pc-barcell{display:none}
+  @container (min-width:400px){
+    #pipChart .pc-line{grid-template-columns:22px 1fr 18px 1fr 18px 70px 36px;column-gap:4px;font-size:.7rem}
+    #pipChart .pc-line>:nth-child(n){grid-area:auto}
+    #pipChart .pc-barcell{display:block}
+  }
   #pipChart .pc-val{justify-content:flex-end}#pipChart .pc-val>b{min-width:0}
   #pipPill{white-space:normal;max-width:232px}
   .wrap>.status h1{font-size:clamp(1.2rem,1.6vw,1.6rem)}
@@ -1346,6 +1354,18 @@ function consoleLoser(){
   d.innerHTML='<span class="bl">🎈</span><span class="bt"></span>';d.querySelector(".bt").textContent=t("betterLuck");
   document.body.append(d);setTimeout(()=>d.remove(),6500);
 }
+// ---------- Wide layout: size the board column to exactly the board, so the side columns share the rest equally ----------
+function fitBoard(){
+  const wrap=document.querySelector(".wrap");if(!wrap)return;
+  if(innerWidth<=1000||getComputedStyle(wrap).display!=="grid"){wrap.style.removeProperty("--bw");return}
+  const cs=getComputedStyle(wrap),gap=parseFloat(cs.columnGap)||0,rgap=parseFloat(cs.rowGap)||0;
+  const sides=document.body.classList.contains("no-tracker")&&document.body.classList.contains("no-score")?0:2*232+2*gap;
+  const msg=document.querySelector(".wrap>.msgrow"),ctl=document.querySelector(".wrap>.controls");
+  const availH=wrap.clientHeight-(msg?msg.offsetHeight:0)-(ctl?ctl.offsetHeight:0)-2*rgap;
+  const availW=wrap.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0)-sides;
+  wrap.style.setProperty("--bw",Math.max(200,Math.floor(Math.min(availW,availH*540/412)))+"px");
+}
+addEventListener("resize",fitBoard);
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;
   const pos=S.posHist||[];
@@ -1483,6 +1503,7 @@ function applyTracker(){applyPrefs()}
 const BOARDS=["wood","danish","modern","flat"],BLABEL={wood:"bsWood",danish:"bsDanish",modern:"bsModern",flat:"bsFlat"};
 const NUMS=["none","mine","both"],NLABEL={none:"pnNone",mine:"pnMine",both:"pnBoth"};
 function applyPrefs(){
+  setTimeout(fitBoard,0);
   if(prefs.off!=="stack"&&prefs.off!=="number")prefs.off="number";
   {const on=document.getElementById("offNow");if(on)on.textContent=t(prefs.off==="stack"?"offStack":"offNumber")}
   if(!NUMS.includes(prefs.nums))prefs.nums=prefs.bothNums?"both":"mine";delete prefs.bothNums;

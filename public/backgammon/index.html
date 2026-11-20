@@ -868,8 +868,13 @@ function render(){
     const o=S.openRoll,hiC=o.w>o.b?"w":"b";
     ["w","b"].forEach(c=>drawDie(dieAt[c],182,o[c],c,S.rem.includes(o[c])?1:.35,c===hiC));
   }else{
-    S.dice.forEach((d,k)=>{const used=S.rem.length<(S.dice[0]===S.dice[1]?4:2)&&!S.rem.includes(d)||(S.dice[0]===S.dice[1]&&k>=S.rem.length);
-      drawDie((S.turn==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,S.turn,used?.35:1,false)});
+    const dbl=S.dice.length===2&&S.dice[0]===S.dice[1],usedN=dbl?4-S.rem.length:0;
+    S.dice.forEach((d,k)=>{const x=(S.turn==="w"?X0+6*W+BARW+60:X0+60)+k*44;
+      if(dbl){ // doubles: each die stands for two moves, so each move used greys out half a die (right die first)
+        const halves=Math.max(0,Math.min(2,k===1?usedN:usedN-2));
+        drawDie(x,182,d,S.turn,halves===2?.35:1,false);if(halves===1)halfGrey(x,182);return}
+      const used=S.rem.length<2&&!S.rem.includes(d);
+      drawDie(x,182,d,S.turn,used?.35:1,false)});
     if(!S.dice.length&&S.blocked&&!S.winner)
       S.blocked.dice.forEach((d,k)=>drawDie((S.blocked.c==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,S.blocked.c,.35,false));
   }
@@ -935,6 +940,8 @@ function render(){
   document.getElementById("sitB").hidden=mode!=="online"||!!S.seats.b||sitting;
   document.getElementById("mode").textContent=mode==="ai"?t("modePractice"):mode==="online"?(connected?t("modeOnline",(S.seats.w?1:0)+(S.seats.b?1:0),peerIds.filter(id=>id!==S.seats.w&&id!==S.seats.b).length):t("reconnecting")):t("connecting");
 }
+// Grey wash over the right half of a die (used for one of the two moves a doubles die stands for).
+function halfGrey(x,y){el("path",{d:`M${x+18} ${y}H${x+30}a6 6 0 0 1 6 6V${y+30}a6 6 0 0 1-6 6H${x+18}Z`,fill:"#8a8a8a",opacity:.7,"pointer-events":"none"},document.getElementById("board"))}
 function drawDie(x,y,v,c,op,glow){
   const svg=document.getElementById("board");
   if(glow)el("rect",{x:x-5,y:y-5,width:46,height:46,rx:10,fill:"var(--glow)",opacity:.55,filter:"url(#soft)"},svg);

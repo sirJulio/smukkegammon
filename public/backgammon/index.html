@@ -375,7 +375,7 @@ const STR={
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
   modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",ckAsk:"Play this game with a clock?",ckNo:"No clock",ckProposes:(n,p)=>n+" proposes a clock: "+p+".",ckAccept:"Accept",ckDecline:"Decline",ckWaiting:p=>"Waiting for your opponent to accept: "+p+".",
-  ckTournament:"Tournament",ckNormal:"Online normal",ckBlitz:"Blitz",ckRelaxed:"Relaxed",ckDesc:(per,bank)=>per+" s per move + "+bank+" min bank",ckAuto:c=>c+" ran out of time, so a random legal move was played.",ckOutForfeit:"out of time loses",ckOutRandom:"out of time plays a random move",timeUp:c=>c+" ran out of time.",kindtimeout:"A win on time",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
+  ckTournament:"Tournament",ckNormal:"Online normal",ckBlitz:"Blitz",ckRelaxed:"Relaxed",ckDesc:(per,bank)=>per+" s per move + "+bank+" min bank",ckAuto:c=>c+" ran out of time, so a random legal move was played.",ckOutForfeit:"out of time loses",ckOutRandom:"out of time plays a random move",ckOut3:"3 random moves, then out of time loses",timeUp:c=>c+" ran out of time.",kindtimeout:"A win on time",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",rxTurning:"Your turning point",rxTurnTxt:(n,p,b,x)=>"Turn "+n+", you played "+p+". The bot preferred "+b+", worth about "+x+"% more winning chances.",
   tipHit:"Tip: when a hit is on offer, taking it often swings the game.",tipNoHit:"Tip: hitting isn't always right; sometimes it leaves you exposed to a return shot.",
   tipGeneral:"Tip: before moving, count how many rolls hit any checker you leave alone.",rxGG:"Good game",rxWellPlayed:"You played solidly; the dice decided this one.",
@@ -413,7 +413,7 @@ const STR={
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
   modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",ckAsk:"Spil dette spil med ur?",ckNo:"Intet ur",ckProposes:(n,p)=>n+" foreslår et ur: "+p+".",ckAccept:"Accepter",ckDecline:"Afvis",ckWaiting:p=>"Venter på at modstanderen accepterer: "+p+".",
-  ckTournament:"Turnering",ckNormal:"Online normal",ckBlitz:"Lyn",ckRelaxed:"Afslappet",ckDesc:(per,bank)=>per+" sek. pr. træk + "+bank+" min. bank",ckAuto:c=>c+" løb tør for tid, så et tilfældigt lovligt træk blev spillet.",ckOutForfeit:"tiden ude taber",ckOutRandom:"tiden ude giver et tilfældigt træk",timeUp:c=>c+" løb tør for tid.",kindtimeout:"En sejr på tid",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
+  ckTournament:"Turnering",ckNormal:"Online normal",ckBlitz:"Lyn",ckRelaxed:"Afslappet",ckDesc:(per,bank)=>per+" sek. pr. træk + "+bank+" min. bank",ckAuto:c=>c+" løb tør for tid, så et tilfældigt lovligt træk blev spillet.",ckOutForfeit:"tiden ude taber",ckOutRandom:"tiden ude giver et tilfældigt træk",ckOut3:"3 tilfældige træk, derefter taber tiden ude",timeUp:c=>c+" løb tør for tid.",kindtimeout:"En sejr på tid",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",rxTurning:"Dit vendepunkt",rxTurnTxt:(n,p,b,x)=>"Tur "+n+", du spillede "+p+". Botten foretrak "+b+", ca. "+x+"% bedre vinderchancer.",
   tipHit:"Tip: når du kan slå en brik, vender det ofte spillet.",tipNoHit:"Tip: det er ikke altid rigtigt at slå; nogle gange står du blottet for et modslag.",
   tipGeneral:"Tip: før du flytter, så tæl hvor mange slag der rammer en brik, du lader stå alene.",rxGG:"Godt spil",rxWellPlayed:"Du spillede solidt; terningerne afgjorde det her.",
@@ -1401,10 +1401,11 @@ document.addEventListener("click",e=>{const w=document.getElementById("modeWrap"
 // ---------- Game clock (tournament-style delay clock) ----------
 // Each move gets free seconds; time beyond that comes out of the player's bank. When the bank is empty,
 // that player's own device lets the bot play the move for them. Both players must agree before a game.
-// out: what happens when the bank runs out. "forfeit" loses the game; "random" plays a random legal move (never an advantage).
-const CLOCKS={tournament:{per:12,bank:240,k:"ckTournament",out:"forfeit"},normal:{per:10,bank:120,k:"ckNormal",out:"forfeit"},
+// out: what happens when the bank runs out. "forfeit" loses the game; "random" plays a random legal move (never an advantage);
+// "random3" plays random moves for the first three timeouts, and the fourth loses the game.
+const CLOCKS={tournament:{per:12,bank:240,k:"ckTournament",out:"forfeit"},normal:{per:10,bank:120,k:"ckNormal",out:"random3"},
   blitz:{per:8,bank:60,k:"ckBlitz",out:"random"},relaxed:{per:30,bank:300,k:"ckRelaxed",out:"random"}};
-const ckLabel=id=>{const c=CLOCKS[id];return t(c.k)+" ("+t("ckDesc",c.per,c.bank/60)+"; "+t(c.out==="forfeit"?"ckOutForfeit":"ckOutRandom")+")"};
+const ckLabel=id=>{const c=CLOCKS[id];return t(c.k)+" ("+t("ckDesc",c.per,c.bank/60)+"; "+t(c.out==="forfeit"?"ckOutForfeit":c.out==="random3"?"ckOut3":"ckOutRandom")+")"};
 function ckRunner(st){if(!st.clock||st.winner||st.opening)return null;return st.offer?opp(st.offer.from):st.turn}
 function clockAccount(n){
   if(!n.clock)return;
@@ -1418,7 +1419,8 @@ function clockAccount(n){
 }
 function ckLeft(c){ // [free seconds left, bank left]
   const k=S.clock;if(!k)return [0,0];const bank=k.bank[c]||0;
-  if(ckRunner(S)!==c||!k.t0)return [0,bank];
+  if(ckRunner(S)!==c)return [0,bank];
+  if(!k.t0)return [k.per,bank]; // clock not started yet
   const el=(Date.now()-k.t0)/1000;return el<k.per?[k.per-el,bank]:[0,Math.max(0,bank-(el-k.per))];
 }
 const fmtT=x=>{x=Math.max(0,Math.ceil(x));return Math.floor(x/60)+":"+String(x%60).padStart(2,"0")};
@@ -1438,10 +1440,15 @@ async function clockCheck(){
   const [free,bank]=ckLeft(c);if(free>0||bank>0)return;
   ckAutoBusy=true;
   try{
-    const out=(CLOCKS[S.clock.preset]||{}).out||"random";
+    let out=(CLOCKS[S.clock.preset]||{}).out||"random";
+    const used=(S.clock.outs&&S.clock.outs[c])||0;
+    const prior=S.clock.outAt===S.clock.t0?used-1:used; // timeouts before this turn
+    if(out==="random3")out=prior>=3?"forfeit":"random";
     if(out==="forfeit"){ // tournament rule: out of time loses the game, at the cube's value
       const n=clone(S),w=opp(c);n.offer=null;n.winner=w;n.kind="timeout";n.points=cubeOf(S).value;n.rem=[];n.prev=null;n.done=false;
       n.log=[["timeUp",c],["wins",w,"single"]];standUp(n);sel=null;commit(n);return}
+    if(S.clock.outAt!==S.clock.t0){  // first time this turn: count it in shared state
+      const n=clone(S);n.clock=Object.assign({},n.clock,{outAt:n.clock.t0,outs:Object.assign({w:0,b:0},n.clock.outs,{[c]:used+1})});commit(n);return}
     if(S.offer){answerDouble(Math.random()<.5,true);return}
     if(S.done){confirmTurn(true);return}
     if(!S.rem.length){rollFor();return}

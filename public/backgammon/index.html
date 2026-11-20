@@ -295,7 +295,10 @@ const STR={
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
   modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+" watching",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
-  youWin:"You win!",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
+  youWin:"You win!",winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="You"?"win":"wins")+" – "+v,
+  vBackgammon:"crushed them with a backgammon!",vBrink:"came back from the brink to snatch it!",vBehind:"clinched victory from behind!",
+  vDominated:"dominated the whole game!",vRout:"dominated and won a gammon!",vGammon:"won big with a gammon!",vSeesaw:"won a real seesaw battle!",
+  vNailbiter:"edged out a nail-biter!",vSteady:"kept control and saw it home.",botWins:"The bot wins",compWins:"Computer wins",friendWins:"Your friend wins",colourWins:c=>c+" wins!",
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
@@ -321,7 +324,10 @@ const STR={
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
   modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+" ser med",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
-  youWin:"Du vandt!",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
+  youWin:"Du vandt!",winsLine:(n,v)=>n.charAt(0).toUpperCase()+n.slice(1)+" "+(n==="Du"?"vandt":"vinder")+" – "+v,
+  vBackgammon:"knuste modstanderen med en backgammon!",vBrink:"kom tilbage fra randen og snuppede sejren!",vBehind:"vendte kampen og vandt bagfra!",
+  vDominated:"dominerede hele spillet!",vRout:"dominerede og vandt en gammon!",vGammon:"vandt stort med en gammon!",vSeesaw:"vandt en ægte vippe-kamp!",
+  vNailbiter:"trak det længste strå i en nervepirrer!",vSteady:"holdt styr på det og bragte det hjem.",botWins:"Botten vandt",compWins:"Computeren vandt",friendWins:"Din ven vandt",colourWins:c=>c+" vinder!",
   kindsingle:"Et enkelt spil",kindgammon:"En gammon",kindbackgammon:"En backgammon",
   worth:n=>", værd "+n+" point. ",boreOff:(l,n)=>l+" fik "+n+" af 15 brikker af.",You:"Du",
   autoFinish:"Spil automatisk færdig",stopAuto:"Stop automatisk spil",autoOn:c=>"Computeren spiller løbet færdigt for "+c+".",thinking:"Computeren tænker…",compPlayed:p=>"Computeren spillede "+p+"."}
@@ -961,8 +967,9 @@ function render(){
   else{
     const w=S.winner,l=opp(w),was=S.lastSeats||S.seats,iPlayed=mode==="online"&&(was.w===me||was.b===me);
     const winnerIsBot=String(was[w]||"").startsWith("bot:");
-    document.getElementById("resHead").textContent=mode!=="online"?t("colourWins",name(w))
-      :was[w]===me?t("youWin"):winnerIsBot?t("botWins"):iPlayed?t("friendWins"):t("colourWins",name(w));
+    const who=mode==="ai"?(w==="w"?t("You"):t("computer")):mode!=="online"?name(w)
+      :was[w]===me?t("You"):winnerIsBot?botLabel(was[w]):was[w]?nameOf(was[w]):name(w);
+    document.getElementById("resHead").textContent=t("winsLine",who,t(verdict(w)));
     const kind=S.kind||"single",pts=S.points||1;
     const kindTxt=t("kind"+kind);
     const loser=mode==="ai"?(l==="b"?t("seatComputer"):t("You")):name(l);
@@ -1151,6 +1158,27 @@ function sheetLines(){
     cur[col]=m;if(m.h!==undefined)cur.h=m.h;
   });
   return lines;
+}
+// ---------- End-of-game verdict: a one-line read of how the game went, from the bot's winning chances each turn ----------
+function verdict(w){
+  const kind=S.kind||"single";
+  if(kind==="backgammon")return "vBackgammon";
+  const vals=(S.posHist||[]).map(e=>evalCache.get(posKey(e))).filter(v=>typeof v==="number").map(v=>w==="w"?v:1-v);
+  const lead=e=>{const at={pts:e.p,bar:{w:e.bw,b:e.bb},off:{w:e.ow,b:e.ob}};return w==="w"?pips(at,"b")-pips(at,"w"):pips(at,"w")-pips(at,"b")};
+  if(vals.length<4){ // no engine numbers: judge from the pip race instead
+    const L=(S.posHist||[]).slice(2).map(lead);if(!L.length)return kind==="gammon"?"vGammon":"vSteady";
+    if(Math.min(...L)<=-25)return "vBehind";if(Math.min(...L)>=0)return kind==="gammon"?"vGammon":"vDominated";
+    return kind==="gammon"?"vGammon":"vSteady"}
+  const mid=vals.slice(2),lo=Math.min(...mid);
+  let swings=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-.5)*(vals[i]-.5)<0)swings++;
+  const late=vals.slice(Math.floor(vals.length*.75));
+  if(lo<.15)return "vBrink";
+  if(lo<.35)return "vBehind";
+  if(lo>=.6)return kind==="gammon"?"vRout":"vDominated";
+  if(kind==="gammon")return "vGammon";
+  if(swings>=4)return "vSeesaw";
+  if(Math.min(...late)<.6)return "vNailbiter";
+  return "vSteady";
 }
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;

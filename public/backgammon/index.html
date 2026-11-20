@@ -187,10 +187,22 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
 .clockask p{margin:0}.clockask .opts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .clockask button{font-size:.85rem;padding:6px 10px}
 @media (min-width:1001px){.clockask{grid-area:1/2/5/3;position:static;transform:none;align-self:center;justify-self:center}}
+.anapanel{position:fixed;inset:0;z-index:45;background:rgba(10,20,15,.55);display:grid;place-items:center;padding:12px}
+.anacard{background:var(--panel);color:var(--fg);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);width:min(760px,100%);max-height:calc(100dvh - 24px);display:flex;flex-direction:column;overflow:hidden}
+.anahead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid color-mix(in srgb,var(--muted) 25%,transparent)}
+#anaBody{overflow:auto;padding:12px 16px;display:grid;gap:12px;font-size:.9rem}
+#anaBody table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+#anaBody th,#anaBody td{padding:5px 8px;text-align:left;border-bottom:1px solid color-mix(in srgb,var(--muted) 18%,transparent)}
+#anaBody td.num,#anaBody th.num{text-align:right}
+#anaBody .note{color:var(--muted);font-size:.8rem;margin:0}
+#anaBody .bar{height:6px;border-radius:3px;background:color-mix(in srgb,var(--muted) 20%,transparent);overflow:hidden}#anaBody .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+#anaBody .err{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;padding:6px 0;border-bottom:1px solid color-mix(in srgb,var(--muted) 18%,transparent)}
+#anaBody .err .tag{font-weight:700;white-space:nowrap}#anaBody .err .sub{grid-column:2/4;color:var(--muted);font-size:.82rem}
 @media (prefers-reduced-motion:reduce){.result .card{animation:none}}
 </style>
 </head><body>
 
+<div id="anaPanel" class="anapanel" role="dialog" aria-modal="true" hidden><div class="anacard"><div class="anahead"><b data-t="anaTitle">Game analysis</b><button id="anaClose" data-t="close">Close</button></div><div id="anaBody"></div></div></div>
 <div id="updateBar" class="update" role="status" hidden><span data-t="newVersion">A new version of SmukkeGammon is ready.</span><button id="updateBtn" class="primary" data-t="refresh">Refresh</button></div>
 <div class="wrap">
   <a class="back" href="/" data-t="allGames">← All games</a>
@@ -269,6 +281,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
           <button id="again" class="primary" data-t="again">Play again</button>
           <button id="look" data-t="look">View board</button>
           <button id="exportGame" data-t="exportGame">Export game</button>
+          <button id="analyseGame" data-t="analyseGame">Analyse game</button>
         </div>
       </div>
     </div>
@@ -375,7 +388,12 @@ const STR={
   rollFor:c=>"Roll for "+c,rollStart:c=>"Roll 1 die ("+c+")",takeSeat:"Take a seat to roll",gameOver:"Game over",
   ahead:(l,n)=>"("+l+" ahead by "+n+")",even:"(even)",you:"you",computer:"the computer",friend:"your friend",
   seatYou:"you",seatTaken:"taken",seatOpen:"open",seatDevice:"this device",seatComputer:"Computer",
-  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",exportGame:"Export game",ckAsk:"Play this game with a clock?",ckNo:"No clock",ckProposes:(n,p)=>n+" proposes a clock: "+p+".",ckAccept:"Accept",ckDecline:"Decline",ckWaiting:p=>"Waiting for your opponent to accept: "+p+".",
+  modePractice:"Practice vs computer",modeOnline:(p,w)=>"Online · "+p+" seated · "+w+(w===1?" observer":" observers"),obsNone:"No one is observing.",analyseGame:"Analyse game",anaTitle:"Game analysis",anaLoading:"Loading GNU Backgammon…",anaRunning:"Analysing every move and cube decision…",
+  anaFail:m=>"The analysis couldn't run: "+m,anaNoGame:"There is no finished game to analyse.",anaPlayer:"Player",anaErrRate:"Error rate",anaRating:"Rating",anaMarks:"Doubtful / bad / very bad",anaCube:"Cube errors",anaLuck:"Luck",
+  anaMistakes:"Moves to look at",anaNone:"No mistakes worth flagging. Well played, both of you!",anaTurn:(n,p,d)=>"Turn "+n+" · "+p+(d?" · "+d:""),
+  anaPlayed:(a,b)=>"Played "+a+"; best was "+b+".",anaCubeTxt:(a,b)=>"Chose: "+a+". Better: "+b+".",anaDoubtful:"Doubtful",anaBad:"Bad",anaVeryBad:"Very bad",
+  anaDownload:"Download full analysis",anaAbout:"Analysed by GNU Backgammon (2-ply). Error rate is equity lost per move, in thousandths of a point (lower is better). Loss in brackets is in points per game.",
+  cubeNoDouble:"no double",cubeDouble:"double",cubeTake:"take",cubePass:"pass",exportGame:"Export game",ckAsk:"Play this game with a clock?",ckNo:"No clock",ckProposes:(n,p)=>n+" proposes a clock: "+p+".",ckAccept:"Accept",ckDecline:"Decline",ckWaiting:p=>"Waiting for your opponent to accept: "+p+".",
   ckTournament:"Tournament",ckNormal:"Online normal",ckBlitz:"Blitz",ckRelaxed:"Relaxed",ckDesc:(per,bank)=>per+" s per move + "+bank+" min bank",ckAuto:c=>c+" ran out of time, so a random legal move was played.",ckOutForfeit:"out of time loses",ckOutRandom:"out of time plays a random move",ckOut3:"3 random moves, then out of time loses",timeUp:c=>c+" ran out of time.",kindtimeout:"A win on time",obsYou:"you",watchingMsg:"You're watching. Sit as White or Black to play.",watchingFull:"You're watching.",leaveSeat:"Leave seat",double:"Double",take:"Take",drop:"Decline",doubles:(c,v)=>c+" offers a double, to "+v+".",takes:(c,v)=>c+" takes. The cube is now on "+v+".",drops:c=>c+" declines the double.",kinddropped:"Double declined",answerQ:"Take or decline?",waitAnswer:c=>"Waiting for "+c+" to answer.",inviteW:"Invite bot as White",inviteB:"Invite bot as Black",removeBot:"Remove bot",seatBot:"wildbg bot",lvlTitle:"How strong should the bot play?",lvl1:"Beginner",lvl2:"Casual",lvl3:"Strong",lvl4:"Expert",cancel:"Cancel",thisDevice:"this device",botThinking:"The bot is thinking…",botFallback:"The wildbg engine didn't answer, so the bot made a simple backup move.",botHere:"The bot plays from this device, so keep this page open.",reconnecting:"Reconnecting…",connecting:"Connecting…",
   youWin:"You win!",rxTurning:"Your turning point",rxTurnTxt:(n,p,b,x)=>"Turn "+n+", you played "+p+". The bot preferred "+b+", worth about "+x+"% more winning chances.",
   tipHit:"Tip: when a hit is on offer, taking it often swings the game.",tipNoHit:"Tip: hitting isn't always right; sometimes it leaves you exposed to a return shot.",
@@ -410,7 +428,12 @@ const STR={
   rollFor:c=>"Slå for "+c,rollStart:c=>"Slå 1 terning ("+c+")",takeSeat:"Vælg en farve for at slå",gameOver:"Spillet er slut",
   ahead:(l,n)=>"("+l+" er foran med "+n+")",even:"(lige)",you:"du",computer:"computeren",friend:"din ven",
   seatYou:"dig",seatTaken:"optaget",seatOpen:"ledig",seatDevice:"denne enhed",seatComputer:"Computer",
-  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",exportGame:"Eksportér spil",ckAsk:"Spil dette spil med ur?",ckNo:"Intet ur",ckProposes:(n,p)=>n+" foreslår et ur: "+p+".",ckAccept:"Accepter",ckDecline:"Afvis",ckWaiting:p=>"Venter på at modstanderen accepterer: "+p+".",
+  modePractice:"Træning mod computeren",modeOnline:(p,w)=>"Online · "+p+" ved bordet · "+w+(w===1?" tilskuer":" tilskuere"),obsNone:"Ingen ser med.",analyseGame:"Analysér spil",anaTitle:"Spilanalyse",anaLoading:"Indlæser GNU Backgammon…",anaRunning:"Analyserer hvert træk og hver doblingsbeslutning…",
+  anaFail:m=>"Analysen kunne ikke køre: "+m,anaNoGame:"Der er intet færdigt spil at analysere.",anaPlayer:"Spiller",anaErrRate:"Fejlrate",anaRating:"Niveau",anaMarks:"Tvivlsom / dårlig / meget dårlig",anaCube:"Doblingsfejl",anaLuck:"Held",
+  anaMistakes:"Træk at kigge på",anaNone:"Ingen fejl værd at nævne. Godt spillet af jer begge!",anaTurn:(n,p,d)=>"Tur "+n+" · "+p+(d?" · "+d:""),
+  anaPlayed:(a,b)=>"Spillede "+a+"; bedst var "+b+".",anaCubeTxt:(a,b)=>"Valgte: "+a+". Bedre: "+b+".",anaDoubtful:"Tvivlsomt",anaBad:"Dårligt",anaVeryBad:"Meget dårligt",
+  anaDownload:"Hent hele analysen",anaAbout:"Analyseret af GNU Backgammon (2-ply). Fejlraten er tabt equity pr. træk i tusindedele point (lavere er bedre). Tab i parentes er i point pr. spil.",
+  cubeNoDouble:"ingen dobling",cubeDouble:"dobl",cubeTake:"tag",cubePass:"afslå",exportGame:"Eksportér spil",ckAsk:"Spil dette spil med ur?",ckNo:"Intet ur",ckProposes:(n,p)=>n+" foreslår et ur: "+p+".",ckAccept:"Accepter",ckDecline:"Afvis",ckWaiting:p=>"Venter på at modstanderen accepterer: "+p+".",
   ckTournament:"Turnering",ckNormal:"Online normal",ckBlitz:"Lyn",ckRelaxed:"Afslappet",ckDesc:(per,bank)=>per+" sek. pr. træk + "+bank+" min. bank",ckAuto:c=>c+" løb tør for tid, så et tilfældigt lovligt træk blev spillet.",ckOutForfeit:"tiden ude taber",ckOutRandom:"tiden ude giver et tilfældigt træk",ckOut3:"3 tilfældige træk, derefter taber tiden ude",timeUp:c=>c+" løb tør for tid.",kindtimeout:"En sejr på tid",obsYou:"dig",watchingMsg:"Du ser med. Vælg Hvid eller Sort for at spille.",watchingFull:"Du ser med.",leaveSeat:"Forlad pladsen",double:"Dobl",take:"Tag imod",drop:"Afvis",doubles:(c,v)=>c+" tilbyder en dobling til "+v+".",takes:(c,v)=>c+" tager imod. Terningen står nu på "+v+".",drops:c=>c+" afviser doblingen.",kinddropped:"Dobling afvist",answerQ:"Tag imod eller afvis?",waitAnswer:c=>"Venter på, at "+c+" svarer.",inviteW:"Inviter bot som Hvid",inviteB:"Inviter bot som Sort",removeBot:"Fjern bot",seatBot:"wildbg-bot",lvlTitle:"Hvor stærkt skal botten spille?",lvl1:"Begynder",lvl2:"Hyggespiller",lvl3:"Stærk",lvl4:"Ekspert",cancel:"Annuller",thisDevice:"denne enhed",botThinking:"Botten tænker…",botFallback:"wildbg-motoren svarede ikke, så botten tog et simpelt reservetræk.",botHere:"Botten spiller fra denne enhed, så hold siden åben.",reconnecting:"Forbinder igen…",connecting:"Forbinder…",
   youWin:"Du vandt!",rxTurning:"Dit vendepunkt",rxTurnTxt:(n,p,b,x)=>"Tur "+n+", du spillede "+p+". Botten foretrak "+b+", ca. "+x+"% bedre vinderchancer.",
   tipHit:"Tip: når du kan slå en brik, vender det ofte spillet.",tipNoHit:"Tip: det er ikke altid rigtigt at slå; nogle gange står du blottet for et modslag.",
@@ -1522,6 +1545,89 @@ function drawClockAsk(){
   box.append(opts);
 }
 document.getElementById("exportGame").onclick=exportGame;
+// ---------- Game analysis by GNU Backgammon (runs in a Web Worker, loaded only when asked for) ----------
+let gbWorker=null,gbSeq=0;const gbJobs=new Map();
+function gnubg(){
+  if(!gbWorker){gbWorker=new Worker("gnubg-worker.js");
+    gbWorker.onmessage=e=>{const m=e.data,j=gbJobs.get(m.id);if(!j)return;if(m.kind==="progress")j.progress(m.note);else{gbJobs.delete(m.id);if(m.kind==="done")j.resolve(m);else{j.reject(new Error(m.message));gbWorker.terminate();gbWorker=null}}}; // a failed run can leave the engine stopped: start fresh next time
+    gbWorker.onerror=e=>{gbJobs.forEach(j=>j.reject(new Error(e.message||"worker failed")));gbJobs.clear();gbWorker=null}}
+  return gbWorker;
+}
+function gbAnalyse(mat,progress){return new Promise((resolve,reject)=>{const id=++gbSeq;gbJobs.set(id,{resolve,reject,progress});gnubg().postMessage({id,kind:"analyse",mat,plies:2})})}
+// Read gnubg's text export: one entry per checker play or cube decision, with the equity lost.
+// In the import, the left column (White) is called "gnubg" and the right (Black) "somebody".
+function parseAnalysis(text){
+  const col=n=>n==="gnubg"?"w":"b",out=[];
+  text.split(/\nMove number \d+:\s+/).slice(1).forEach(blk=>{
+    const head=blk.split("\n")[0];let m;
+    const eq={};blk.replace(/^\s*\d\. (No double|No redouble|Double, take|Double, pass|Redouble, take|Redouble, pass)\s+([+-]\d+\.\d+)/gm,(_,k,v)=>{eq[k.replace("Redouble","Double").replace("No redouble","No double")]=+v});
+    const ND=eq["No double"],DT=eq["Double, take"],DP=eq["Double, pass"],haveCube=ND!=null&&DT!=null&&DP!=null;
+    const best=haveCube?Math.max(ND,Math.min(DT,DP)):null,bestName=haveCube?(best===ND?"cubeNoDouble":"cubeDouble"):null;
+    if((m=/^(\S+) to play (\d)(\d)/.exec(head))){
+      const c=col(m[1]);
+      if(haveCube&&best-ND>=0.04)out.push({kind:"cube",c,loss:best-ND,chose:"cubeNoDouble",better:"cubeDouble"});
+      const lines=blk.split("\n"),pi=lines.findIndex(l=>/^\*\s+\d+\./.test(l)),b1=lines.find(l=>/^[* ]\s+1\./.test(l));
+      const play=x=>x?x.replace(/^[* ]\s+\d+\.\s+Cubeful \d-ply\s+/,"").replace(/\s+Eq\..*$/,"").trim():"";
+      let loss=0;if(pi>=0){const r=/\(\s*([+-]\d+\.\d+)\)\s*$/.exec(lines[pi]);if(r)loss=-+r[1]}
+      out.push({kind:"move",c,dice:m[2]+m[3],loss:Math.max(0,loss),played:pi>=0?play(lines[pi]):"",best:play(b1)});
+    }else if((m=/^(\S+) on roll, cube decision\?/.exec(head))){
+      const c=col(m[1]);if(haveCube&&best-ND>=0.04)out.push({kind:"cube",c,loss:best-ND,chose:"cubeNoDouble",better:"cubeDouble"});
+    }else if((m=/^(\S+) doubles/.exec(head))&&haveCube){
+      const doubler=col(m[1]),taker=doubler==="w"?"b":"w";
+      if(/^\* \S+ doubles/m.test(blk)||true){const l=best-Math.min(DT,DP);if(l>=0.04)out.push({kind:"cube",c:doubler,loss:l,chose:"cubeDouble",better:"cubeNoDouble"})}
+      const took=/^\* \S+ accepts/m.test(blk),passed=/^\* \S+ (rejects|passes|declines)/m.test(blk);
+      if(took&&DT-DP>=0.04)out.push({kind:"cube",c:taker,loss:DT-DP,chose:"cubeTake",better:"cubePass"});
+      if(passed&&DP-DT>=0.04)out.push({kind:"cube",c:taker,loss:DP-DT,chose:"cubePass",better:"cubeTake"});
+    }
+  });
+  return out;
+}
+function parseStats(stats){
+  const row=lbl=>{const l=stats.split("\n").find(x=>x.trim().startsWith(lbl));if(!l)return null;const parts=l.slice(lbl.length).trim().split(/\s{2,}/).filter(x=>!x.startsWith("("));return parts}; // drop the bracketed per-game figures
+  return {rate:row("Error rate mEMG (Points)"),rating:row("Overall rating")||row("Chequerplay rating"),luck:row("Luck rating"),
+    cubeTotal:["Missed doubles below CP","Missed doubles above CP","Wrong doubles below DP","Wrong doubles above TG","Wrong takes","Wrong passes"].map(row)};
+}
+async function analyseGame(){
+  const panel=document.getElementById("anaPanel"),body=document.getElementById("anaBody");panel.hidden=false;body.innerHTML="";
+  const msg=(txt,cls)=>{const p_=document.createElement("p");if(cls)p_.className=cls;p_.textContent=txt;body.append(p_);return p_};
+  if(!S.winner&&!(S.moves&&S.moves.length)){msg(t("anaNoGame"));return}
+  const status=msg(t("anaLoading")),bar=document.createElement("div");bar.className="bar";bar.innerHTML="<i></i>";body.append(bar);
+  const rec=buildRecord(S);
+  try{
+    const r=await gbAnalyse(rec.mat,note=>{status.textContent=t(note==="analyse"?"anaRunning":"anaLoading");bar.firstChild.style.width=note==="analyse"?"60%":"25%"});
+    body.innerHTML="";renderAnalysis(body,r,rec);
+  }catch(e){body.innerHTML="";msg(t("anaFail",e.message))}
+}
+function renderAnalysis(body,r,rec){
+  const names={w:rec.players.white,b:rec.players.black},items=parseAnalysis(r.text),st=parseStats(r.stats);
+  const tbl=document.createElement("table"),hr=document.createElement("tr");
+  [t("anaPlayer"),t("anaErrRate"),t("anaRating"),t("anaMarks"),t("anaCube"),t("anaLuck")].forEach((h,i)=>{const th=document.createElement("th");th.textContent=h;if(i===1||i===3||i===4)th.className="num";hr.append(th)});tbl.append(hr);
+  ["w","b"].forEach((c,ci)=>{const tr=document.createElement("tr");
+    const mine=items.filter(x=>x.c===c&&x.kind==="move"),cnt=lo=>mine.filter(x=>x.loss>=lo&&(lo===0.16||x.loss<(lo===0.04?0.08:0.16))).length;
+    const cube=items.filter(x=>x.c===c&&x.kind==="cube").length;
+    const pick=a=>a&&a[ci]!=null?a[ci].replace(/\s*\(.*\)$/,"").replace(/^-(?=\d)/,""):"–"; // gnubg writes losses as negatives
+    [names[c],pick(st.rate),pick(st.rating),cnt(0.04)+" / "+cnt(0.08)+" / "+cnt(0.16),String(cube),pick(st.luck)].forEach((v,i)=>{const td=document.createElement("td");td.textContent=v;if(i===1||i===3||i===4)td.className="num";tr.append(td)});tbl.append(tr)});
+  body.append(tbl);
+  const h=document.createElement("b");h.textContent=t("anaMistakes");body.append(h);
+  // put each flagged item against our own turn numbers
+  const dm=(S.moves||[]).filter(m=>m.dice&&m.dice.length===2);let k=0;
+  items.forEach(x=>{if(x.kind==="move"){x.turn=dm[k]?turnOf(dm[k]):0;k++}else x.turn=dm[k]?turnOf(dm[k]):(dm[k-1]?turnOf(dm[k-1]):0)});
+  const flagged=items.filter(x=>x.loss>=0.04);
+  if(!flagged.length){const p_=document.createElement("p");p_.textContent=t("anaNone");body.append(p_)}
+  flagged.forEach(x=>{const d=document.createElement("div");d.className="err";
+    const sev=x.loss>=0.16?["anaVeryBad","g-vbad"]:x.loss>=0.08?["anaBad","g-bad"]:["anaDoubtful","g-dub"];
+    const tag=document.createElement("span");tag.className="tag "+sev[1];tag.textContent=t(sev[0]);
+    const what=document.createElement("span");what.textContent=x.turn?t("anaTurn",x.turn,names[x.c],x.kind==="move"?x.dice:""):names[x.c]+(x.kind==="move"?" · "+x.dice:"");
+    const amt=document.createElement("span");amt.className="num";amt.textContent="(−"+x.loss.toFixed(3)+")";
+    const sub=document.createElement("span");sub.className="sub";sub.textContent=x.kind==="move"?t("anaPlayed",x.played,x.best):t("anaCubeTxt",t(x.chose),t(x.better));
+    d.append(tag,what,amt,sub);body.append(d)});
+  const about=document.createElement("p");about.className="note";about.textContent=t("anaAbout");body.append(about);
+  const dl=document.createElement("button");dl.textContent=t("anaDownload");dl.onclick=()=>{const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([r.stats+"\n\n"+r.text],{type:"text/plain"}));a.download="smukkegammon-analysis-"+(room||"game")+".txt";document.body.append(a);a.click();setTimeout(()=>a.remove(),1000)};
+  body.append(dl);
+}
+document.getElementById("analyseGame").onclick=analyseGame;
+document.getElementById("anaClose").onclick=()=>{document.getElementById("anaPanel").hidden=true};
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;
   const pos=S.posHist||[];

@@ -16,6 +16,8 @@ env:
   WILDBG_REPO: https://github.com/carsten-wenderdel/wildbg
   WILDBG_CODE: d000b0e3c9b143640636882a657f27e67c89361f
   WILDBG_NETS: 8c42b06f2ff4868431fc0372b2787e612537317d
+  # Ted Hwa's gnubg_web (GNU Backgammon 1.05 for the browser), pinned
+  GNUBG_WEB: 95d0ffcbaa3f891571c28af5ba57ec831c6ee000
 
 jobs:
   build-deploy:
@@ -98,6 +100,35 @@ jobs:
           node-version: 22
 
       - run: npm ci
+
+      # GNU Backgammon (Ted Hwa's gnubg_web port) compiled to WebAssembly, used for deep analysis.
+      # Pinned, so it is built once and reused until the pin changes.
+      - name: Reuse the built GNU Backgammon engine if nothing about it changed
+        id: gbcache
+        uses: actions/cache@v4
+        with:
+          path: public/backgammon/gnubg
+          key: gnubg-${{ env.GNUBG_WEB }}-fs-v1
+
+      - name: Fetch the gnubg_web port
+        if: steps.gbcache.outputs.cache-hit != 'true'
+        run: |
+          git init -q gnubg-web && cd gnubg-web
+          git remote add origin https://github.com/hwatheod/gnubg-web
+          git fetch -q --depth 1 origin "$GNUBG_WEB" && git checkout -q FETCH_HEAD
+
+      - uses: mymindstorm/setup-emsdk@v14
+        if: steps.gbcache.outputs.cache-hit != 'true'
+
+      - name: Build GNU Backgammon for the browser
+        if: steps.gbcache.outputs.cache-hit != 'true'
+        working-directory: gnubg-web
+        run: |
+          ./build.sh 2>&1 | tail -5
+          mkdir -p ../public/backgammon/gnubg
+          cp build/gnubg.js build/gnubg.wasm build/gnubg.data ../public/backgammon/gnubg/
+          cp COPYING ../public/backgammon/gnubg/COPYING.txt
+          ls -l ../public/backgammon/gnubg
 
       - name: Stamp the build version
         run: |

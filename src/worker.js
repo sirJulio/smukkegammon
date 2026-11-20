@@ -2,13 +2,14 @@
 // /api/room/<code>/ws  → WebSocket into that room
 // /api/room/<code>/history → JSON list of finished games in that room
 // /api/room/<code>/state   → the current board, read-only (for checking a room from outside)
+// /api/room/<code>/game/<id>.mat → one finished game's log in .mat format (GNU Backgammon / eXtreme Gammon)
 
 const CODE = /^[a-z0-9-]{3,40}$/;
 
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    const m = url.pathname.match(/^\/api\/room\/([^/]+)\/(ws|history|state)$/);
+    const m = url.pathname.match(/^\/api\/room\/([^/]+)\/(ws|history|state|game\/[a-z0-9]{4,40}\.mat)$/);
     if (m) {
       const code = m[1].toLowerCase();
       if (!CODE.test(code)) return new Response("Bad room code", { status: 400 });
@@ -32,6 +33,12 @@ export class GameRoom {
       const rev = (await this.ctx.storage.get("rev")) || 0;
       if (state) delete state.prev; // undo history isn't useful from outside
       return Response.json({ rev, state }, { headers: { "cache-control": "no-store" } });
+    }
+    const g = url.pathname.match(/\/game\/([a-z0-9]{4,40})\.mat$/);
+    if (g) {
+      const mat = await this.ctx.storage.get("mat:" + g[1]);
+      if (!mat) return new Response("No such game", { status: 404 });
+      return new Response(mat, { headers: { "content-type": "text/plain; charset=utf-8", "content-disposition": `attachment; filename="smukkegammon-${g[1]}.mat"`, "cache-control": "no-store" } });
     }
     if (url.pathname.endsWith("/history")) {
       const hist = (await this.ctx.storage.get("history")) || [];
@@ -103,8 +110,16 @@ export class GameRoom {
     if (msg.type === "record" && msg.rec && typeof msg.rec === "object") {
       const hist = (await this.ctx.storage.get("history")) || [];
       if (hist.some((h) => h.id === msg.rec.id)) return;
-      hist.unshift(msg.rec);
-      await this.ctx.storage.put("history", hist.slice(0, 200));
+      const rec = msg.rec;
+      // keep the .mat log as its own small file in the room's storage, and point to it from the history entry
+      if (typeof rec.mat === "string" && /^[a-z0-9]{4,40}$/.test(String(rec.id)) && rec.mat.length < 100000) {
+        await this.ctx.storage.put("mat:" + rec.id, rec.mat);
+        rec.file = "game/" + rec.id + ".mat";
+      }
+      delete rec.mat;
+      hist.unshift(rec);
+      for (const old of hist.slice(1000)) if (old.file) await this.ctx.storage.delete("mat:" + old.id);
+      await this.ctx.storage.put("history", hist.slice(0, 1000));
     }
   }
 

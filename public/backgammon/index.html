@@ -642,13 +642,39 @@ function undo(){if(!S.prev||S.winner||!mine(S.turn))return;const p=clone(S.prev)
 function saveRecord(n){
   if(!n.id)return;
   const seatsWere=n.lastSeats||n.seats;
-  const who=c=>mode==="ai"?(c==="w"?"You":"Computer"):mode==="local"?(c==="w"?"White":"Black"):(seatsWere[c]===me?"You":String(seatsWere[c]||"").startsWith("bot:")?"wildbg bot":"Friend");
-  const rec={id:n.id,started:n.started||null,finished:new Date().toISOString(),
+  const who=c=>{const id=seatsWere[c];if(mode==="ai")return c==="w"?(myName||"You"):"Computer";if(!id)return c==="w"?"White":"Black";
+    return String(id).startsWith("bot:")?"wildbg bot (level "+botLevelOf(id)+")":(id===me?myName:(n.names&&n.names[id]))||"Guest"};
+  const rec={id:n.id,room,started:n.started||null,finished:new Date().toISOString(),
     mode:mode==="ai"?"practice vs computer":mode==="online"?"online":"pass-and-play",
     players:{white:who("w"),black:who("b")},winner:n.winner==="w"?"white":"black",result:n.kind||"single",points:n.points||1,
-    borneOff:{white:n.off.w,black:n.off.b},
+    borneOff:{white:n.off.w,black:n.off.b},clock:n.clock?n.clock.preset:null,
     moves:(n.moves||[]).map(t=>(t.p==="w"?"W ":"B ")+t.dice.join("-")+": "+(t.play.length?t.play.join(" "):"no move"))};
+  rec.mat=matFile(n,rec);
   send({type:"record",rec});
+}
+// ---------- Game log in the standard .mat format (opens in GNU Backgammon and eXtreme Gammon) ----------
+// White is player 1 (left column), Black player 2. Plays are already written from each mover's own side.
+function matFile(n,rec){
+  const d=new Date(rec.finished),pad=x=>String(x).padStart(2,"0");
+  const q=x=>String(x).replace(/"/g,"'");
+  const head=[`; [Site "SmukkeGammon (games.jdunne.au)"]`,`; [Room "${q(room)}"]`,`; [Player 1 "${q(rec.players.white)}"]`,`; [Player 2 "${q(rec.players.black)}"]`,
+    `; [EventDate "${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}"]`,`; [EventTime "${pad(d.getHours())}.${pad(d.getMinutes())}"]`,
+    `; [Variation "Backgammon"]`,`; [Unrated "On"]`].concat(rec.clock?[`; [Clock "${rec.clock}"]`]:[]);
+  const cell=m=>{if(!m)return "";if(!m.dice||!m.dice.length){const x=(m.play||[])[0]||"";
+      if(x.startsWith("doubles to "))return " Doubles => "+x.slice(11);if(x==="takes")return " Takes";if(x==="declines")return " Drops";return ""}
+    const d_=m.dice.slice().sort((a,b)=>b-a).join("");
+    // .mat spelling: bar is 25, off is 0, and "8/5(2)" is written out as two moves
+    const steps=(m.play&&m.play[0]!=="shut out"?m.play:[]).flatMap(x=>{const r=/^(.*?)\((\d)\)$/.exec(x);return r?Array(+r[2]).fill(r[1]):[x]})
+      .map(x=>x.replace(/bar/g,"25").replace(/off/g,"0"));
+    return d_+": "+steps.join(" ")};
+  const rows=[];let cur=null;
+  (n.moves||[]).forEach(m=>{if(!cur||cur[m.p]||(m.p==="w"&&cur.b)){cur={w:null,b:null};rows.push(cur)}cur[m.p]=m});
+  const L=head.concat([""," 0 point match",""," Game 1",` ${(rec.players.white+" : 0").padEnd(32)}${rec.players.black} : 0`]);
+  rows.forEach((r,i)=>L.push(`${String(i+1).padStart(3)}) ${cell(r.w).padEnd(28)}${cell(r.b)}`));
+  const pts=rec.points,won=`Wins ${pts} point${pts===1?"":"s"}`;
+  L.push(n.winner==="w"?`      ${won}`:`      ${"".padEnd(28)}${won}`);
+  if(n.kind==="timeout")L.push(`; ${n.winner==="w"?rec.players.black:rec.players.white} ran out of time`);
+  return L.join("\n")+"\n";
 }
 async function commit(n){
   clockAccount(n);

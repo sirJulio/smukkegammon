@@ -78,10 +78,11 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .sp-body{flex:1;min-height:0;overflow:auto;background:var(--panel);border-radius:6px}
 .sidepanel .sb{font-size:.74rem;color:var(--fg)}.sidepanel .sb th,.sidepanel .sb td{padding:4px 6px}
 @media (max-width:1000px){.sidepanel{display:none}}
-.gearwrap{position:relative}
+.gearwrap{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.myname{border:0;background:none;padding:0;font:inherit;font-size:.78rem;font-weight:600;color:var(--fg);cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myname:hover{color:var(--accent)}
 .gear{display:grid;place-items:center;width:36px;height:36px;padding:0;border-radius:999px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
 .gear[aria-expanded="true"]{outline:2px solid var(--accent)}
-.prefs{position:absolute;right:0;top:44px;z-index:25;width:min(300px,calc(100vw - 32px));background:var(--panel);color:var(--fg);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:grid;gap:8px}
+.prefs{position:absolute;right:0;top:100%;margin-top:8px;z-index:25;width:min(300px,calc(100vw - 32px));background:var(--panel);color:var(--fg);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:grid;gap:8px}
 .prefs label{display:flex;gap:10px;align-items:center;cursor:pointer;font-size:.92rem}
 .prefs input{width:18px;height:18px;accent-color:var(--accent)}
 .prefs-h{margin:0;font-weight:600;font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -118,6 +119,7 @@ body{box-sizing:border-box;height:100dvh;padding-block:8px;overflow:auto}
     <h1 data-t="title">SmukkeGammon</h1>
     <span class="pill" id="mode" style="margin-left:auto">Connecting…</span>
     <div class="gearwrap">
+      <button id="myNameTag" class="myname" title="Change my name" hidden></button>
       <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
       <div id="prefs" class="prefs" role="menu" hidden>
         <p class="prefs-h" data-t="prefShow">Show on the board</p>
@@ -326,7 +328,7 @@ function T(log){
   if(!log)return "";if(typeof log==="string")return log;
   return log.map(tok=>t(tok[0],...tok.slice(1).map(x=>isColour(x)?name(x):x))).join(" ");
 }
-function applyStatic(){
+function applyStatic(){try{showMyName()}catch(e){}
   document.documentElement.lang=lang==="da"?"da":"en-AU";
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
   document.title=t("title");
@@ -753,6 +755,8 @@ function fillScores(){
     const cells=[(i+1)+". "+(k==="bot"?botLabel("bot:#4"):/^bot\d$/.test(k)?botLabel("bot:#"+k.slice(3)):(k===me&&myName?myName:r.name||t("guest")))+(k===me?" ("+t("seatYou")+")":""),r.pts,r.won,r.played];
     cells.forEach((v,j)=>{const td=document.createElement("td");td.textContent=v;if(j)td.className="num";tr.append(td)});tb.append(tr)});
 }
+function showMyName(){const el=document.getElementById("myNameTag");el.textContent=myName;el.hidden=!myName;el.title=t("changeName")}
+document.getElementById("myNameTag").onclick=()=>askName();
 function askName(){
   const box=document.getElementById("nameInput");box.value=myName;document.getElementById("namePick").hidden=false;
   setTimeout(()=>box.focus(),50);
@@ -761,7 +765,7 @@ function saveName(){
   let v=document.getElementById("nameInput").value.trim().replace(/\s+/g," ").slice(0,20);
   if(!v)v=t("guest")+" "+String(me||"").slice(-3).toUpperCase();
   myName=v;try{localStorage.setItem("bg-name",v)}catch(e){}
-  document.getElementById("namePick").hidden=true;
+  document.getElementById("namePick").hidden=true;showMyName();
   send({type:"hello",player:me,name:myName});
   // keep the room's name list current if I'm already known there
   if(mode==="online"&&(S.seats.w===me||S.seats.b===me||(S.names&&S.names[me]))){const n=withMyName(clone(S));

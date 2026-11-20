@@ -130,6 +130,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
         <label><input type="checkbox" data-pref="tracker"> <span data-t="prefTracker">Move tracker</span></label>
         <label><input type="checkbox" data-pref="movable"> <span data-t="prefMovable">Glow on checkers that can move</span></label>
         <label><input type="checkbox" data-pref="targets"> <span data-t="prefTargets">Highlight where a checker can go</span></label>
+        <label><input type="checkbox" data-pref="chime"> <span data-t="prefChime">Chime when it's my turn</span></label>
         <label><input type="checkbox" data-pref="trail"> <span data-t="prefTrail">Show the last move</span></label>
         <p class="prefs-note" data-t="prefNarrow">Scoreboard and tracker need a wide screen.</p>
         <hr>
@@ -224,7 +225,7 @@ const START=()=>{const p=Array(24).fill(0);p[23]=2;p[12]=5;p[7]=3;p[5]=5;p[0]=-2
 const ptFor=(c,i)=>i==="bar"?"bar":i==="off"?"off":String(c==="w"?i+1:24-i);
 let S=START(), me=null, db=null, ref=null, local=true, sel=null, writing=false, pending=null;
 let resultDismissed=false;
-const prefs=Object.assign({board:"wood",score:true,tracker:true,movable:true,targets:true,trail:true},(()=>{
+const prefs=Object.assign({chime:true,board:"wood",score:true,tracker:true,movable:true,targets:true,trail:true},(()=>{
   try{const o=JSON.parse(localStorage.getItem("bg-prefs")||"{}");if(localStorage.getItem("bg-tracker")==="off"&&o.tracker===undefined)o.tracker=false;return o}catch(e){return {}}})());
 let mode="local", onlineS=null, sampler=null, ws=null, rev=0, room="", connected=false, aiBusy=false, aiGame=0;
 const opp=c=>c==="w"?"b":"w";
@@ -286,7 +287,7 @@ const STR={
   rolled:(c,a,b)=>c+" rolled "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" rolled "+a+"–"+b+" and has no legal moves.",
   played:(c,p)=>p?c+" played "+p+".":c+" played their roll.",
-  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",prefShow:"Show on the board",prefScore:"Scoreboard",prefTracker:"Move tracker",prefMovable:"Glow on checkers that can move",prefTargets:"Highlight where a checker can go",prefTrail:"Show the last move",prefNarrow:"Scoreboard and tracker need a wide screen.",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:p=>"Best move: "+p,gDeep:"Checked with a deeper search",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",pointNums:"Point numbers",offShow:"Borne-off checkers",offStack:"Stack",offNumber:"Number",pnNone:"None",pnMine:"My side only",pnBoth:"Both players",boardStyle:"Board style",bsWood:"Classic wood & felt",bsDanish:"Danish minimal",bsModern:"Modern",bsFlat:"Original (flat)",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
+  toRoll:c=>c+" to roll.",pipLead:"Pip lead",winChances:"Winning chances",pcTitle:"Move tracker",prefShow:"Show on the board",prefScore:"Scoreboard",prefTracker:"Move tracker",prefMovable:"Glow on checkers that can move",prefTargets:"Highlight where a checker can go",prefTrail:"Show the last move",prefNarrow:"Scoreboard and tracker need a wide screen.",gForced:"Only one way to play this roll",gBrilliant:"Brilliant: the only good play",gGreat:"Great: clearly the best play",gBest:"Best play",gGood:"Good: close to the best play",gDoubtful:"Doubtful",gMistake:"Mistake",gBlunder:"Blunder",gBestWas:p=>"Best move: "+p,gDeep:"Checked with a deeper search",nDoubles:v=>"Doubles → "+v,nTakes:"Takes",nDrops:"Declines",nShut:"Shut out",nNone:"no move",hideTracker:"Hide tracker",showTracker:"Show tracker",pcMove:"Move",pcPips:"Pips",pcNone:"Moves appear here as the game is played.",pcMoved:"moved","pcWin%":"Win %",pcWin:(c,n)=>c+" "+n+"% to win",evalLoading:"Rating positions…",evalUnavailable:"Engine not available",pcStart:"Start",pcTurn:n=>"Turn "+n,newVersion:"A new version of SmukkeGammon is ready.",refresh:"Refresh",guest:"Guest",scoresBtn:"Scoreboard",noScores:"No games finished in this room yet.",colPlayer:"Player",colPts:"Points",colWon:"Won",colPlayed:"Played",close:"Close",nameTitle:"Your name",nameHelp:"Shown to others in this room and on the scoreboard.",save:"Save",changeName:"Change my name",pointNums:"Point numbers",prefChime:"Chime when it's my turn",offShow:"Borne-off checkers",offStack:"Stack",offNumber:"Number",pnNone:"None",pnMine:"My side only",pnBoth:"Both players",boardStyle:"Board style",bsWood:"Classic wood & felt",bsDanish:"Danish minimal",bsModern:"Modern",bsFlat:"Original (flat)",nextGame:"Seats are open: sit down to play the next game.",shutOut:c=>c+" is shut out (every entry point is blocked), so their turn is skipped.",
   wins:(c,k)=>k==="single"?c+" wins!":c+" wins a "+k+"!",
   yourMove:"Your move.",waitingFor:c=>"Waiting for "+c+".",sitToJoin:"Sit at a colour to join in.",
   confirmQ:"Happy with that? Confirm, or undo to change it.",deciding:c=>c+" is deciding.",compTurn:"Computer's turn.",
@@ -315,7 +316,7 @@ const STR={
   rolled:(c,a,b)=>c+" slog "+a+"–"+b+".",
   noMoves:(c,a,b)=>c+" slog "+a+"–"+b+" og har ingen lovlige træk.",
   played:(c,p)=>p?c+" spillede "+p+".":c+" spillede sit slag.",
-  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",prefShow:"Vis på brættet",prefScore:"Stilling",prefTracker:"Træk-oversigt",prefMovable:"Lys på brikker, der kan flyttes",prefTargets:"Fremhæv hvor en brik kan flytte hen",prefTrail:"Vis det sidste træk",prefNarrow:"Stilling og træk-oversigt kræver en bred skærm.",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:p=>"Bedste træk: "+p,gDeep:"Tjekket med en dybere søgning",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",pointNums:"Feltnumre",offShow:"Udspillede brikker",offStack:"Stak",offNumber:"Tal",pnNone:"Ingen",pnMine:"Kun min side",pnBoth:"Begge spillere",boardStyle:"Brætstil",bsWood:"Klassisk træ og filt",bsDanish:"Dansk minimalistisk",bsModern:"Moderne",bsFlat:"Original (flad)",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
+  toRoll:c=>c+" skal slå.",pipLead:"Pip-føring",winChances:"Vinderchancer",pcTitle:"Træk-oversigt",prefShow:"Vis på brættet",prefScore:"Stilling",prefTracker:"Træk-oversigt",prefMovable:"Lys på brikker, der kan flyttes",prefTargets:"Fremhæv hvor en brik kan flytte hen",prefTrail:"Vis det sidste træk",prefNarrow:"Stilling og træk-oversigt kræver en bred skærm.",gForced:"Kun én måde at spille slaget på",gBrilliant:"Genialt: det eneste gode træk",gGreat:"Stærkt: klart det bedste træk",gBest:"Bedste træk",gGood:"Godt: tæt på det bedste træk",gDoubtful:"Tvivlsomt",gMistake:"Fejl",gBlunder:"Bommert",gBestWas:p=>"Bedste træk: "+p,gDeep:"Tjekket med en dybere søgning",nDoubles:v=>"Dobler → "+v,nTakes:"Tager",nDrops:"Afviser",nShut:"Lukket ude",nNone:"intet træk",hideTracker:"Skjul oversigt",showTracker:"Vis oversigt",pcMove:"Træk",pcPips:"Pips",pcNone:"Trækkene vises her, efterhånden som der spilles.",pcMoved:"trak","pcWin%":"Vind %",pcWin:(c,n)=>c+" "+n+"% for at vinde",evalLoading:"Vurderer stillinger…",evalUnavailable:"Motoren er ikke tilgængelig",pcStart:"Start",pcTurn:n=>"Tur "+n,newVersion:"En ny version af SmukkeGammon er klar.",refresh:"Opdater",guest:"Gæst",scoresBtn:"Stilling",noScores:"Ingen færdige spil i dette rum endnu.",colPlayer:"Spiller",colPts:"Point",colWon:"Vundet",colPlayed:"Spillet",close:"Luk",nameTitle:"Dit navn",nameHelp:"Vises for andre i rummet og på stillingen.",save:"Gem",changeName:"Skift navn",pointNums:"Feltnumre",prefChime:"Klokkespil når det er min tur",offShow:"Udspillede brikker",offStack:"Stak",offNumber:"Tal",pnNone:"Ingen",pnMine:"Kun min side",pnBoth:"Begge spillere",boardStyle:"Brætstil",bsWood:"Klassisk træ og filt",bsDanish:"Dansk minimalistisk",bsModern:"Moderne",bsFlat:"Original (flad)",nextGame:"Pladserne er ledige: sæt dig for at spille næste spil.",shutOut:c=>c+" er lukket ude (alle indgangsfelter er blokeret), så turen springes over.",
   wins:(c,k)=>k==="single"?c+" vinder!":c+" vinder en "+k+"!",
   yourMove:"Din tur.",waitingFor:c=>"Venter på "+c+".",sitToJoin:"Vælg en farve for at være med.",
   confirmQ:"Tilfreds? Bekræft, eller fortryd for at ændre det.",deciding:c=>c+" overvejer.",compTurn:"Computerens tur.",
@@ -936,6 +937,7 @@ function render(){
       S.blocked.dice.forEach((d,k)=>drawDie((S.blocked.c==="w"?X0+6*W+BARW+60:X0+60)+k*44,182,d,S.blocked.c,.35,false));
   }
   drawCube(svg);
+  maybeChime();
   if(prefs.score)fillScores();
   renderPipChart();
   // status
@@ -1179,6 +1181,25 @@ function verdict(w){
   if(swings>=4)return "vSeesaw";
   if(Math.min(...late)<.6)return "vNailbiter";
   return "vSteady";
+}
+// ---------- Turn chime: a soft two-note bell when your turn starts, in case you're looking away ----------
+let actx=null,chimeKey=null,chimeReady=false;  // no chime for the state the page opens in
+function unlockAudio(){try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
+["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true}));
+function playChime(){
+  if(!actx||actx.state!=="running")return;
+  const now=actx.currentTime;
+  [[880,0],[1318.5,.16]].forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();
+    o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0,now+d);g.gain.linearRampToValueAtTime(.18,now+d+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,now+d+.9);o.connect(g).connect(actx.destination);o.start(now+d);o.stop(now+d+1)});
+}
+function maybeChime(){
+  // a new turn of mine is waiting for my roll (or my opening die)
+  const myOpen=S.opening&&myColor()&&S.opening[myColor()]==null;
+  const waiting=!S.winner&&!S.offer&&(myOpen||(!S.opening&&mine(S.turn)&&!S.rem.length&&!S.done));
+  const key=waiting?(S.opening?"open":S.turn+":"+((S.moves||[]).length)):null;
+  if(key&&key!==chimeKey&&chimeReady&&prefs.chime)playChime();
+  chimeKey=key;chimeReady=true;
 }
 function renderPipChart(){
   const box=document.getElementById("pcBars");if(!box)return;

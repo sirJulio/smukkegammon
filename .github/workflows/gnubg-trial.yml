@@ -1,0 +1,40 @@
+# Trial build of GNU Backgammon for the browser (WebAssembly), from Ted Hwa's gnubg_web port.
+# Only checks that it builds and how big it is; nothing here is deployed.
+name: GNU Backgammon web trial build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sandbox]
+    paths: [".github/workflows/gnubg-trial.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch the gnubg_web port
+        run: git clone --depth 1 https://github.com/hwatheod/gnubg-web gnubg-web
+      - uses: mymindstorm/setup-emsdk@v14
+      - name: Build
+        working-directory: gnubg-web
+        run: |
+          emcc --version | head -1
+          ./build.sh 2>&1 | tail -20
+          ls -l build
+      - name: Report sizes
+        working-directory: gnubg-web/build
+        run: |
+          echo "### gnubg_web build" >> "$GITHUB_STEP_SUMMARY"
+          for f in gnubg.js gnubg.wasm gnubg.data; do
+            [ -f "$f" ] && echo "- $f: $(stat -c%s "$f") bytes, $(gzip -9 -c "$f" | wc -c) gzipped" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gnubg-web-build
+          path: |
+            gnubg-web/build/gnubg.js
+            gnubg-web/build/gnubg.wasm
+            gnubg-web/build/gnubg.data

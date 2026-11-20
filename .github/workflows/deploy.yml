@@ -25,7 +25,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The wildbg engine is pinned, so build it once and reuse it until the pin or the fast-engine patch changes.
+      - name: Reuse the built wildbg engine if nothing about it changed
+        id: wbcache
+        uses: actions/cache@v4
+        with:
+          path: public/backgammon/wildbg
+          key: wildbg-${{ env.WILDBG_CODE }}-${{ env.WILDBG_NETS }}-${{ hashFiles('scripts/add_fast_engine.py') }}-v1
+
       - name: Fetch wildbg and its stronger networks
+        if: steps.wbcache.outputs.cache-hit != 'true'
         run: |
           git init -q wildbg && cd wildbg
           git remote add origin "$WILDBG_REPO"
@@ -35,17 +44,21 @@ jobs:
           ls -l neural-nets
 
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.wbcache.outputs.cache-hit != 'true'
         with:
           targets: wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
+        if: steps.wbcache.outputs.cache-hit != 'true'
         with:
           workspaces: wildbg
 
       - name: Add the fast one-ply engine
+        if: steps.wbcache.outputs.cache-hit != 'true'
         run: python3 scripts/add_fast_engine.py wildbg/crates/wildbg-wasm/src/lib.rs
 
       - name: Build wildbg for WebAssembly (optimised for size)
+        if: steps.wbcache.outputs.cache-hit != 'true'
         working-directory: wildbg
         env:
           CARGO_PROFILE_RELEASE_OPT_LEVEL: "s"
@@ -57,12 +70,14 @@ jobs:
         run: cargo build --release --package wildbg-wasm --target wasm32-unknown-unknown
 
       - name: Install the matching wasm-bindgen
+        if: steps.wbcache.outputs.cache-hit != 'true'
         run: |
           VER=$(grep -A1 '^name = "wasm-bindgen"$' wildbg/Cargo.lock | sed -n 's/version = "\(.*\)"/\1/p')
           echo "wasm-bindgen $VER"
           cargo install wasm-bindgen-cli --version "$VER" --locked
 
       - name: Generate browser bindings into the site
+        if: steps.wbcache.outputs.cache-hit != 'true'
         run: |
           mkdir -p public/backgammon/wildbg
           wasm-bindgen --target web --no-typescript --out-dir public/backgammon/wildbg \

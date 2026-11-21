@@ -1590,6 +1590,11 @@ function parseAnalysis(text){
   });
   return out;
 }
+// gnubg's fixed rating and luck labels, in Danish when the page is in Danish
+const GB_DA={"awful":"Elendig!","beginner":"Begynder","casual player":"Hyggespiller","intermediate":"Øvet","advanced":"Avanceret","expert":"Ekspert",
+  "world class":"Verdensklasse","supernatural":"Overnaturlig","go to bed":"Gå i seng!","bad dice, man":"Dårlige terninger, mand!","none":"Ingen",
+  "good dice, man":"Gode terninger, mand!","go to las vegas":"Tag til Las Vegas!"};
+function gbLabel(x){if(lang!=="da")return x;const k=String(x).trim().replace(/!+$/,"").toLowerCase();return GB_DA[k]||x}
 function parseStats(stats){
   const row=lbl=>{const l=stats.split("\n").find(x=>x.trim().startsWith(lbl));if(!l)return null;const parts=l.slice(lbl.length).trim().split(/\s{2,}/).filter(x=>!x.startsWith("("));return parts}; // drop the bracketed per-game figures
   return {rate:row("Error rate mEMG (Points)"),rating:row("Overall rating")||row("Chequerplay rating"),luck:row("Luck rating"),
@@ -1613,7 +1618,7 @@ function renderAnalysis(body,r,rec){
   ["w","b"].forEach((c,ci)=>{const tr=document.createElement("tr");
     const mine=items.filter(x=>x.c===c&&x.kind==="move"),cnt=lo=>mine.filter(x=>x.loss>=lo&&(lo===0.16||x.loss<(lo===0.04?0.08:0.16))).length;
     const cube=items.filter(x=>x.c===c&&x.kind==="cube").length;
-    const pick=a=>a&&a[ci]!=null?a[ci].replace(/\s*\(.*\)$/,"").replace(/^-(?=\d)/,""):"–"; // gnubg writes losses as negatives
+    const pick=a=>a&&a[ci]!=null?gbLabel(a[ci].replace(/\s*\(.*\)$/,"").replace(/^-(?=\d)/,"")):"–"; // gnubg writes losses as negatives
     [names[c],pick(st.rate),pick(st.rating),cnt(0.04)+" / "+cnt(0.08)+" / "+cnt(0.16),String(cube),pick(st.luck)].forEach((v,i)=>{const td=document.createElement("td");td.textContent=v;if(i===1||i===3||i===4)td.className="num";tr.append(td)});tbl.append(tr)});
   body.append(tbl);
   const h=document.createElement("b");h.textContent=t("anaMistakes");body.append(h);

@@ -1469,13 +1469,17 @@ document.addEventListener("click",e=>{const w=document.getElementById("modeWrap"
 // that player's own device lets the bot play the move for them. Both players must agree before a game.
 // out: what happens when the bank runs out. "forfeit" loses the game; "random" plays a random legal move (never an advantage);
 // "random3" plays random moves for the first three timeouts, and the fourth loses the game.
+// Server time: each device learns its offset from the room server, so clocks agree across devices.
+let srvOffset=0,srvRtt=1e9;const srvNow=()=>Date.now()+srvOffset;
+function syncClock(){send({type:"ping",t:Date.now()})}
+setInterval(()=>{if(connected)syncClock()},60000);
 const CLOCKS={tournament:{per:12,bank:240,k:"ckTournament",out:"forfeit"},normal:{per:10,bank:120,k:"ckNormal",out:"random3"},
   blitz:{per:8,bank:60,k:"ckBlitz",out:"random"},relaxed:{per:30,bank:300,k:"ckRelaxed",out:"random"}};
 const ckLabel=id=>{const c=CLOCKS[id];return t(c.k)+" ("+t("ckDesc",c.per,c.bank/60)+"; "+t(c.out==="forfeit"?"ckOutForfeit":c.out==="random3"?"ckOut3":"ckOutRandom")+")"};
 function ckRunner(st){if(!st.clock||st.winner||st.opening)return null;return st.offer?opp(st.offer.from):st.turn}
 function clockAccount(n){
   if(!n.clock)return;
-  const now=Date.now(),before=ckRunner(S)&&S.clock&&S.clock.t0?ckRunner(S):null,after=ckRunner(n);
+  const now=srvNow(),before=ckRunner(S)&&S.clock&&S.clock.t0?ckRunner(S):null,after=ckRunner(n);
   if(before&&S.clock&&n.clock&&before!==after){
     const over=Math.max(0,now-S.clock.t0-n.clock.per*1000)/1000;
     n.clock=Object.assign({},n.clock,{bank:Object.assign({},n.clock.bank,{[before]:Math.max(0,(S.clock.bank[before]||0)-over)})});
@@ -1487,7 +1491,7 @@ function ckLeft(c){ // [free seconds left, bank left]
   const k=S.clock;if(!k)return [0,0];const bank=k.bank[c]||0;
   if(ckRunner(S)!==c)return [0,bank];
   if(!k.t0)return [k.per,bank]; // clock not started yet
-  const el=(Date.now()-k.t0)/1000;return el<k.per?[k.per-el,bank]:[0,Math.max(0,bank-(el-k.per))];
+  const el=(srvNow()-k.t0)/1000;return el<k.per?[k.per-el,bank]:[0,Math.max(0,bank-(el-k.per))];
 }
 const fmtT=x=>{x=Math.max(0,Math.ceil(x));return Math.floor(x/60)+":"+String(x%60).padStart(2,"0")};
 function drawClock(){
@@ -1502,8 +1506,12 @@ function drawClock(){
 let ckAutoBusy=false;
 async function clockCheck(){
   drawClock();
-  const c=ckRunner(S);if(!c||ckAutoBusy||mode!=="online"||!mine(c)||isBot(c))return;
+  const c=ckRunner(S);if(!c||ckAutoBusy||mode!=="online"||!connected||isBot(c))return;
   const [free,bank]=ckLeft(c);if(free>0||bank>0)return;
+  // The timed-out player's own device acts at once; if it has gone quiet, the opponent's device steps in
+  // after 3 s, then any observer after 6 s, so a closed tab can't stall the game.
+  if(!mine(c)){const over=(srvNow()-S.clock.t0)/1000-S.clock.per-(S.clock.bank[c]||0);
+    const wait=myColor()?3:6;if(over<wait)return}
   ckAutoBusy=true;
   try{
     let out=(CLOCKS[S.clock.preset]||{}).out||"random";
@@ -1718,8 +1726,9 @@ let retry=0;
 function connect(){
   const proto=location.protocol==="https:"?"wss:":"ws:";
   ws=new WebSocket(proto+"//"+location.host+"/api/room/"+room+"/ws");
-  ws.onopen=()=>{retry=0;connected=true;send({type:"hello",player:me,name:myName});if(mode!=="ai")mode="online";render()};
+  ws.onopen=()=>{retry=0;connected=true;send({type:"hello",player:me,name:myName});syncClock();setTimeout(syncClock,1500);if(mode!=="ai")mode="online";render()};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
+    if(m.type==="pong"){const now=Date.now(),rtt=now-m.t;if(rtt<srvRtt*1.5||rtt<300){srvRtt=Math.min(srvRtt,rtt);srvOffset=m.now+rtt/2-now}return}
     if(m.type==="presence"){peers=m.players.length;peerIds=m.players;peerNames=m.names||{};render();return}
     if(m.type==="analysis"){takeShared(m);return}
     if(m.type!=="state")return;

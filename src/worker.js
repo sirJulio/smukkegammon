@@ -59,6 +59,11 @@ export class GameRoom {
   async webSocketMessage(ws, raw) {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
+    // clock sync: reply with the server's time, so every device measures game clocks against one clock
+    if (msg.type === "ping") {
+      ws.send(JSON.stringify({ type: "pong", t: msg.t, now: Date.now() }));
+      return;
+    }
     if (msg.type === "hello" && typeof msg.player === "string") {
       ws.serializeAttachment({ player: msg.player.slice(0, 64), name: typeof msg.name === "string" ? msg.name.slice(0, 20) : "" });
       this.broadcastPresence();

@@ -263,7 +263,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
       <input id="pinInput" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" style="font:inherit;font-size:1.1rem;padding:10px 12px;border-radius:8px;border:1px solid var(--muted);background:var(--bg);color:var(--fg);letter-spacing:.3em;width:7em;justify-self:center">
       <p class="resSub" data-t="pinHelp">Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.</p>
       <p class="resSub" id="pinMsg" role="alert" style="color:var(--accent)" hidden></p>
-      <div class="controls" style="justify-content:center"><button class="primary" type="submit" data-t="save">Save</button></div>
+      <div class="controls" style="justify-content:center"><button id="nameCancel" type="button" data-t="cancel">Cancel</button><button class="primary" type="submit" data-t="save">Save</button></div>
     </form>
   </div>
   <div id="lvlPick" class="result" style="position:fixed;z-index:19" hidden>
@@ -1848,6 +1848,10 @@ applyStatic();
 if(!STR[lang]||askLanguage)document.getElementById("langPick").hidden=false;
 else if(!myName)askName();
 document.getElementById("nameForm").addEventListener("submit",e=>{e.preventDefault();saveName()});
+// Cancel: close the box and keep things exactly as they were
+function cancelName(){document.getElementById("namePick").hidden=true;document.getElementById("pinInput").value="";document.getElementById("pinMsg").hidden=true}
+document.getElementById("nameCancel").onclick=cancelName;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!document.getElementById("namePick").hidden)cancelName()});
 // ---------- Preferences: each viewer's own, kept on this device ----------
 function applyTracker(){applyPrefs()}
 const BOARDS=["wood","danish","modern","flat"],BLABEL={wood:"bsWood",danish:"bsDanish",modern:"bsModern",flat:"bsFlat"};

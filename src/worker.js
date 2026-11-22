@@ -3,6 +3,7 @@
 // /api/room/<code>/history → JSON list of finished games in that room
 // /api/room/<code>/state   → the current board, read-only (for checking a room from outside)
 // /api/player          → POST {name,pin,player}: claim a name with a 4-digit PIN, or get back the player id it belongs to
+// /api/player/<id>/games → JSON list of that player's finished games, across all rooms (newest first)
 // /api/room/<code>/game/<id>.mat → one finished game's log in .mat format (GNU Backgammon / eXtreme Gammon)
 
 const CODE = /^[a-z0-9-]{3,40}$/;
@@ -16,6 +17,11 @@ export default {
       if (!CODE.test(code)) return new Response("Bad room code", { status: 400 });
       const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
       return stub.fetch(req);
+    }
+    const pg = url.pathname.match(/^\/api\/player\/([A-Za-z0-9]{2,64})\/games$/);
+    if (pg) {
+      const { results } = await env.DB.prepare("SELECT * FROM games WHERE white_id=?1 OR black_id=?1 ORDER BY finished DESC LIMIT 500").bind(pg[1]).all();
+      return Response.json(results, { headers: { "cache-control": "no-store" } });
     }
     if (url.pathname === "/api/player" && req.method === "POST") {
       return claim(req, env.DB);
@@ -157,6 +163,14 @@ export class GameRoom {
         rec.file = "game/" + rec.id + ".mat";
       }
       delete rec.mat;
+      // also index the game by each player's id in D1, so a player can find all their games from any room
+      try {
+        const ids = rec.ids && typeof rec.ids === "object" ? rec.ids : {};
+        const s = (v, n) => (typeof v === "string" ? v.slice(0, n) : null);
+        await this.env.DB.prepare("INSERT OR IGNORE INTO games (id,room,finished,white_id,black_id,white_name,black_name,winner,result,points,has_file) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+          .bind(String(rec.id).slice(0, 40), s(rec.room, 40) || "", s(rec.finished, 40) || new Date().toISOString(), s(ids.white, 64), s(ids.black, 64),
+            s(rec.players && rec.players.white, 60), s(rec.players && rec.players.black, 60), s(rec.winner, 10), s(rec.result, 20), Number(rec.points) || 1, rec.file ? 1 : 0).run();
+      } catch {}
       hist.unshift(rec);
       for (const old of hist.slice(1000)) if (old.file) await this.ctx.storage.delete("mat:" + old.id);
       await this.ctx.storage.put("history", hist.slice(0, 1000));

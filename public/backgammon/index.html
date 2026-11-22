@@ -210,6 +210,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
 </head><body>
 
 <div id="anaPanel" class="anapanel" role="dialog" aria-modal="true" hidden><div class="anacard"><div class="anahead"><b data-t="anaTitle">Game analysis</b><button id="anaClose" data-t="close">Close</button></div><div id="anaBody"></div></div></div>
+<div id="gamesPanel" class="anapanel" role="dialog" aria-modal="true" hidden><div class="anacard"><div class="anahead"><b data-t="myGames">My games</b><button id="gamesClose" data-t="close">Close</button></div><div id="gamesBody"></div></div></div>
 <div id="updateBar" class="update" role="status" hidden><span data-t="newVersion">A new version of SmukkeGammon is ready.</span><button id="updateBtn" class="primary" data-t="refresh">Refresh</button></div>
 <button id="invite" class="gear fsbtn invbtn" title="Copy invite link" aria-label="Copy invite link"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
 <button id="fsBtn" class="gear fsbtn" title="Full screen" aria-label="Full screen" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="fsIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
@@ -226,6 +227,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
         <p class="prefs-note" id="acctPin"></p>
         <button id="acctRename" class="prefs-btn" data-t="changeName">Change my name</button>
         <button id="acctPinBtn" class="prefs-btn"></button>
+        <button id="acctGames" class="prefs-btn" data-t="myGames">My games</button>
         <button id="acctOut" class="prefs-btn" data-t="signOut">Sign out on this device</button>
       </div>
       <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button></div>
@@ -387,7 +389,7 @@ function legal(st){
 const name=c=>t(c==="w"?"white":"black");
 // ---------- Language: each viewer's own choice, kept on their device ----------
 const STR={
- en:{pinOn:"PIN set: you can sign in on other devices.",pinOff:"No PIN yet: your name lives only on this device.",pinSet:"Set a PIN",pinOther:"Sign in as someone else",signOut:"Sign out on this device",pinLabel:"PIN (4 digits, optional)",pinHelp:"Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.",pinWrong:"That name is taken and the PIN doesn't match.",pinLocked:n=>"Too many wrong PINs. Try again in "+n+" min.",pinBad:"The PIN must be 4 digits.",pinOffline:"Couldn't check the PIN. Try again.",pinBack:"Welcome back.",fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
+ en:{myGames:"My games",gamesNone:"No finished games linked to you yet. Games you finish from now on appear here.",gamesLoading:"Loading…",gWon:"Won",gLost:"Lost",gVs:"vs",gRoom:"room",gFile:"Game file",gamesNote:"Set a PIN so these follow you to other devices.",pinOn:"PIN set: you can sign in on other devices.",pinOff:"No PIN yet: your name lives only on this device.",pinSet:"Set a PIN",pinOther:"Sign in as someone else",signOut:"Sign out on this device",pinLabel:"PIN (4 digits, optional)",pinHelp:"Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.",pinWrong:"That name is taken and the PIN doesn't match.",pinLocked:n=>"Too many wrong PINs. Try again in "+n+" min.",pinBad:"The PIN must be 4 digits.",pinOffline:"Couldn't check the PIN. Try again.",pinBack:"Welcome back.",fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
   invite:"Copy invite link",copied:"Link copied",copyPrompt:"Copy this link for your friend:",undo:"Undo move",confirmMove:"Confirm move",
   sitW:"Sit as White",sitB:"Sit as Black",newGameBtn:"New game",newYes:"Yes, reset board",cancel:"Cancel",
   vsComputer:"Play vs computer",backOnline:"Back to online table",
@@ -427,7 +429,7 @@ const STR={
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
- da:{pinOn:"PIN sat: du kan logge ind på andre enheder.",pinOff:"Ingen PIN endnu: dit navn findes kun på denne enhed.",pinSet:"Vælg en PIN",pinOther:"Log ind som en anden",signOut:"Log ud på denne enhed",pinLabel:"PIN (4 cifre, valgfri)",pinHelp:"Tilføj en PIN for at beholde dit navn. På enhver enhed: skriv samme navn og PIN for at få din plads og dine point tilbage.",pinWrong:"Navnet er taget, og PIN-koden passer ikke.",pinLocked:n=>"For mange forkerte PIN-koder. Prøv igen om "+n+" min.",pinBad:"PIN-koden skal være 4 cifre.",pinOffline:"Kunne ikke tjekke PIN-koden. Prøv igen.",pinBack:"Velkommen tilbage.",fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
+ da:{myGames:"Mine spil",gamesNone:"Ingen afsluttede spil knyttet til dig endnu. Spil du afslutter fra nu af, vises her.",gamesLoading:"Henter…",gWon:"Vundet",gLost:"Tabt",gVs:"mod",gRoom:"rum",gFile:"Spilfil",gamesNote:"Vælg en PIN, så de følger dig til andre enheder.",pinOn:"PIN sat: du kan logge ind på andre enheder.",pinOff:"Ingen PIN endnu: dit navn findes kun på denne enhed.",pinSet:"Vælg en PIN",pinOther:"Log ind som en anden",signOut:"Log ud på denne enhed",pinLabel:"PIN (4 cifre, valgfri)",pinHelp:"Tilføj en PIN for at beholde dit navn. På enhver enhed: skriv samme navn og PIN for at få din plads og dine point tilbage.",pinWrong:"Navnet er taget, og PIN-koden passer ikke.",pinLocked:n=>"For mange forkerte PIN-koder. Prøv igen om "+n+" min.",pinBad:"PIN-koden skal være 4 cifre.",pinOffline:"Kunne ikke tjekke PIN-koden. Prøv igen.",pinBack:"Velkommen tilbage.",fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
   invite:"Kopiér invitationslink",copied:"Link kopieret",copyPrompt:"Kopiér dette link til din ven:",undo:"Fortryd træk",confirmMove:"Bekræft træk",
   sitW:"Spil som Hvid",sitB:"Spil som Sort",newGameBtn:"Nyt spil",newYes:"Ja, nulstil brættet",cancel:"Annuller",
   vsComputer:"Spil mod computeren",backOnline:"Tilbage til onlinebordet",
@@ -705,7 +707,7 @@ function buildRecord(n,finished){
     return String(id).startsWith("bot:")?"wildbg bot (level "+botLevelOf(id)+")":(id===me?myName:(n.names&&n.names[id]))||"Guest"};
   const rec={id:n.id,room,started:n.started||null,finished:finished||n.finishedAt||new Date().toISOString(),
     mode:mode==="ai"?"practice vs computer":mode==="online"?"online":"pass-and-play",
-    players:{white:who("w"),black:who("b")},winner:n.winner==="w"?"white":"black",result:n.kind||"single",points:n.points||1,
+    players:{white:who("w"),black:who("b")},ids:{white:seatsWere.w||null,black:seatsWere.b||null},winner:n.winner==="w"?"white":"black",result:n.kind||"single",points:n.points||1,
     borneOff:{white:n.off.w,black:n.off.b},clock:n.clock?n.clock.preset:null,
     moves:(n.moves||[]).map(t=>(t.p==="w"?"W ":"B ")+t.dice.join("-")+": "+(t.play.length?t.play.join(" "):"no move"))};
   rec.mat=matFile(n,rec);
@@ -965,6 +967,21 @@ document.addEventListener("click",e=>{if(!acctBox.hidden&&!acctBox.contains(e.ta
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!acctBox.hidden){closeAcct();acctBtn.focus()}});
 document.getElementById("acctRename").onclick=()=>{closeAcct();askName()};
 document.getElementById("acctPinBtn").onclick=()=>{closeAcct();askName();setTimeout(()=>document.getElementById("pinInput").focus(),80)};
+document.getElementById("acctGames").onclick=async()=>{closeAcct();const box=document.getElementById("gamesBody"),pan=document.getElementById("gamesPanel");
+  box.textContent=t("gamesLoading");pan.hidden=false;let list=[];
+  try{list=await (await fetch("/api/player/"+encodeURIComponent(me)+"/games")).json()}catch(e){}
+  box.textContent="";
+  const pinned=pinnedName()&&pinnedName().toLowerCase()===myName.toLowerCase();
+  if(!pinned){const p=document.createElement("p");p.className="prefs-note";p.textContent=t("gamesNote");box.append(p)}
+  if(!list.length){const p=document.createElement("p");p.textContent=t("gamesNone");box.append(p);return}
+  for(const g of list){const iw=g.white_id===me,won=(g.winner==="white")===iw,opp=iw?g.black_name:g.white_name;
+    const row=document.createElement("p");row.style.margin="6px 0";
+    const d=new Date(g.finished);
+    row.append((won?"✓ "+t("gWon"):"✗ "+t("gLost"))+(g.points>1?" ("+g.points+")":"")+" "+t("gVs")+" "+(opp||"?")+" · "+d.toLocaleDateString(lang==="da"?"da-DK":"en-AU")+" · ");
+    const r=document.createElement("a");r.href="/backgammon/?room="+encodeURIComponent(g.room);r.textContent=t("gRoom")+" "+g.room;row.append(r);
+    if(g.has_file){const a=document.createElement("a");a.href="/api/room/"+encodeURIComponent(g.room)+"/game/"+encodeURIComponent(g.id)+".mat";a.textContent=t("gFile");row.append(" · ",a)}
+    box.append(row)}};
+document.getElementById("gamesClose").onclick=()=>{document.getElementById("gamesPanel").hidden=true};
 document.getElementById("acctOut").onclick=()=>{closeAcct();
   try{localStorage.removeItem("bg-player");localStorage.removeItem("bg-name");localStorage.removeItem("bg-pinned")}catch(e){}
   me=playerId();myName="";showMyName();send({type:"hello",player:me,name:""});render();askName()};

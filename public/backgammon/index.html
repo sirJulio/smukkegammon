@@ -78,7 +78,8 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .sp-body{flex:1;min-height:0;overflow:auto;background:var(--panel);border-radius:6px}
 .sidepanel .sb{font-size:.74rem;color:var(--fg)}.sidepanel .sb th,.sidepanel .sb td{padding:4px 6px}
 @media (max-width:1000px){.sidepanel{display:none}}
-.gearrow{display:flex;gap:6px}
+.fsbtn{position:fixed;right:12px;bottom:12px;z-index:50;opacity:.8;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.fsbtn:hover,.fsbtn:focus-visible{opacity:1}
 .gearwrap{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .myname{border:0;background:none;padding:0;font:inherit;font-size:.78rem;font-weight:600;color:var(--fg);cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myname:hover{color:var(--accent)}
 .gear{display:grid;place-items:center;width:36px;height:36px;padding:0;border-radius:999px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
@@ -205,6 +206,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
 
 <div id="anaPanel" class="anapanel" role="dialog" aria-modal="true" hidden><div class="anacard"><div class="anahead"><b data-t="anaTitle">Game analysis</b><button id="anaClose" data-t="close">Close</button></div><div id="anaBody"></div></div></div>
 <div id="updateBar" class="update" role="status" hidden><span data-t="newVersion">A new version of SmukkeGammon is ready.</span><button id="updateBtn" class="primary" data-t="refresh">Refresh</button></div>
+<button id="fsBtn" class="gear fsbtn" title="Full screen" aria-label="Full screen" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="fsIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
 <div class="wrap">
   <a class="back" href="/" data-t="allGames">← All games</a>
   <div class="status">
@@ -212,8 +214,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
     <span class="modewrap" id="modeWrap" tabindex="0"><span class="pill" id="mode">Connecting…</span><span class="obslist" id="obsList" role="tooltip"></span></span>
     <div class="gearwrap">
       <button id="myNameTag" class="myname" title="Change my name" hidden></button>
-      <span class="gearrow"><button id="fsBtn" class="gear" title="Full screen" aria-label="Full screen" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="fsIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
-      <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button></span>
+            <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
       <div id="prefs" class="prefs" role="menu" hidden>
         <p class="prefs-h" data-t="prefShow">Show on the board</p>
         <label><input type="checkbox" data-pref="score"> <span data-t="prefScore">Scoreboard</span></label>

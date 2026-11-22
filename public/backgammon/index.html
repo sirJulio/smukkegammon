@@ -79,6 +79,8 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .sidepanel .sb{font-size:.74rem;color:var(--fg)}.sidepanel .sb th,.sidepanel .sb td{padding:4px 6px}
 @media (max-width:1000px){.sidepanel{display:none}}
 .fsbtn{position:fixed;right:12px;bottom:12px;z-index:50;opacity:.8;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.invbtn{right:56px}
+.invtip{position:fixed;right:12px;bottom:56px;z-index:50;background:var(--panel);color:var(--fg);padding:4px 10px;border-radius:8px;font-size:14px}
 .fsbtn:hover,.fsbtn:focus-visible{opacity:1}
 .gearwrap{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .myname{border:0;background:none;padding:0;font:inherit;font-size:.78rem;font-weight:600;color:var(--fg);cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myname:hover{color:var(--accent)}
@@ -206,6 +208,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
 
 <div id="anaPanel" class="anapanel" role="dialog" aria-modal="true" hidden><div class="anacard"><div class="anahead"><b data-t="anaTitle">Game analysis</b><button id="anaClose" data-t="close">Close</button></div><div id="anaBody"></div></div></div>
 <div id="updateBar" class="update" role="status" hidden><span data-t="newVersion">A new version of SmukkeGammon is ready.</span><button id="updateBtn" class="primary" data-t="refresh">Refresh</button></div>
+<button id="invite" class="gear fsbtn invbtn" title="Copy invite link" aria-label="Copy invite link"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
 <button id="fsBtn" class="gear fsbtn" title="Full screen" aria-label="Full screen" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="fsIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
 <div class="wrap">
   <a class="back" href="/" data-t="allGames">← All games</a>
@@ -293,7 +296,7 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
       <div class="sp-body"><table class="sb"><thead><tr><th data-t="colPlayer">Player</th><th class="num" data-t="colPts">Points</th><th class="num" data-t="colWon">Won</th><th class="num" data-t="colPlayed">Played</th></tr></thead><tbody id="scoreRows"></tbody></table></div>
     </div>
   </div>
-  <div class="status msgrow"><span class="pill"><span data-t="room">Room</span> <b id="roomCode" style="margin-left:4px"></b></span><span class="pill clockpill" id="clockPill" hidden></span><span id="msg">Loading the table…</span><button id="invite" data-t="invite">Copy invite link</button></div>
+  <div class="status msgrow"><span class="pill"><span data-t="room">Room</span> <b id="roomCode" style="margin-left:4px"></b></span><span class="pill clockpill" id="clockPill" hidden></span><span id="msg">Loading the table…</span></div>
   <div class="controls">
     <button id="roll" class="primary">Roll dice</button>
     <button id="confirmTurn" class="primary" hidden data-t="confirmMove">Confirm move</button>
@@ -464,6 +467,7 @@ function applyStatic(){try{showMyName()}catch(e){}
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
   document.title=t("title");
   try{fsSync()}catch(e){}
+  {const b=document.getElementById("invite");b.title=t("invite");b.setAttribute("aria-label",t("invite"))}
 }
 // Full-screen button (for tablets with no F11 key); hidden where the browser cannot do it
 const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
@@ -1773,9 +1777,10 @@ let peers=0,peerIds=[];
 me=playerId();room=roomCode();local=false;
 document.getElementById("roomCode").textContent=room;
 document.getElementById("invite").onclick=async()=>{const link=location.origin+"/backgammon/?room="+room+"&join=1";
-  try{await navigator.clipboard.writeText(link);document.getElementById("invite").textContent=t("copied")}
+  try{await navigator.clipboard.writeText(link);invTip(t("copied"))}
   catch(e){prompt(t("copyPrompt"),link)}
-  setTimeout(()=>document.getElementById("invite").textContent=t("invite"),2000)};
+  };
+function invTip(m){let d=document.getElementById("invTip");if(!d){d=document.createElement("div");d.id="invTip";d.className="invtip";d.setAttribute("role","status");document.body.append(d)}d.textContent=m;d.hidden=false;clearTimeout(invTip.h);invTip.h=setTimeout(()=>d.hidden=true,2000)}
 document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
 document.getElementById("offBtn").onclick=e=>{e.stopPropagation();prefs.off=prefs.off==="stack"?"number":"stack";
   try{localStorage.setItem("bg-prefs",JSON.stringify(prefs))}catch(x){}applyPrefs();render()};

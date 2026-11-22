@@ -83,6 +83,9 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .invtip{position:fixed;right:12px;bottom:56px;z-index:50;background:var(--panel);color:var(--fg);padding:4px 10px;border-radius:8px;font-size:14px}
 .fsbtn:hover,.fsbtn:focus-visible{opacity:1}
 .gearwrap{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.gearrow{display:flex;gap:6px}
+.avatar{font-weight:700;font-size:1rem;background:var(--accent);color:var(--bg)}
+.avatar[aria-expanded="true"]{outline:2px solid var(--fg)}
 .myname{border:0;background:none;padding:0;font:inherit;font-size:.78rem;font-weight:600;color:var(--fg);cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myname:hover{color:var(--accent)}
 .gear{display:grid;place-items:center;width:36px;height:36px;padding:0;border-radius:999px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
 .gear[aria-expanded="true"]{outline:2px solid var(--accent)}
@@ -216,8 +219,16 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
     <h1 data-t="title">SmukkeGammon</h1>
     <span class="modewrap" id="modeWrap" tabindex="0"><span class="pill" id="mode">Connecting…</span><span class="obslist" id="obsList" role="tooltip"></span></span>
     <div class="gearwrap">
-      <button id="myNameTag" class="myname" title="Change my name" hidden></button>
-            <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+      <div class="gearrow">
+      <button id="myNameTag" class="gear avatar" aria-haspopup="true" aria-expanded="false" aria-controls="acct" hidden></button>
+      <div id="acct" class="prefs" role="menu" hidden>
+        <p class="prefs-h" id="acctName"></p>
+        <p class="prefs-note" id="acctPin"></p>
+        <button id="acctRename" class="prefs-btn" data-t="changeName">Change my name</button>
+        <button id="acctPinBtn" class="prefs-btn"></button>
+        <button id="acctOut" class="prefs-btn" data-t="signOut">Sign out on this device</button>
+      </div>
+      <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button></div>
       <div id="prefs" class="prefs" role="menu" hidden>
         <p class="prefs-h" data-t="prefShow">Show on the board</p>
         <label><input type="checkbox" data-pref="score"> <span data-t="prefScore">Scoreboard</span></label>
@@ -232,7 +243,6 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
         <button id="numsBtn" class="prefs-btn"><span data-t="pointNums">Point numbers</span>: <b id="numsNow"></b></button>
         <button id="styleBtn" class="prefs-btn"><span data-t="boardStyle">Board style</span>: <b id="styleNow"></b></button>
         <button id="langBtn" class="prefs-btn">Language · Sprog: <b id="langNow">English</b></button>
-        <button id="nameChange" class="prefs-btn" data-t="changeName">Change my name</button>
         <hr>
 <p class="prefs-note" data-t="note">Tap one of your checkers, then a highlighted point (or the tray on the right to bear off). White moves anticlockwise toward the bottom-right home; Black toward the top-right. Moves save as you make them, so your friend sees them live. Send your friend the invite link to play in this room.</p>
       </div>
@@ -377,7 +387,7 @@ function legal(st){
 const name=c=>t(c==="w"?"white":"black");
 // ---------- Language: each viewer's own choice, kept on their device ----------
 const STR={
- en:{pinLabel:"PIN (4 digits, optional)",pinHelp:"Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.",pinWrong:"That name is taken and the PIN doesn't match.",pinLocked:n=>"Too many wrong PINs. Try again in "+n+" min.",pinBad:"The PIN must be 4 digits.",pinOffline:"Couldn't check the PIN. Try again.",pinBack:"Welcome back.",fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
+ en:{pinOn:"PIN set: you can sign in on other devices.",pinOff:"No PIN yet: your name lives only on this device.",pinSet:"Set a PIN",pinOther:"Sign in as someone else",signOut:"Sign out on this device",pinLabel:"PIN (4 digits, optional)",pinHelp:"Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.",pinWrong:"That name is taken and the PIN doesn't match.",pinLocked:n=>"Too many wrong PINs. Try again in "+n+" min.",pinBad:"The PIN must be 4 digits.",pinOffline:"Couldn't check the PIN. Try again.",pinBack:"Welcome back.",fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
   invite:"Copy invite link",copied:"Link copied",copyPrompt:"Copy this link for your friend:",undo:"Undo move",confirmMove:"Confirm move",
   sitW:"Sit as White",sitB:"Sit as Black",newGameBtn:"New game",newYes:"Yes, reset board",cancel:"Cancel",
   vsComputer:"Play vs computer",backOnline:"Back to online table",
@@ -417,7 +427,7 @@ const STR={
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
- da:{pinLabel:"PIN (4 cifre, valgfri)",pinHelp:"Tilføj en PIN for at beholde dit navn. På enhver enhed: skriv samme navn og PIN for at få din plads og dine point tilbage.",pinWrong:"Navnet er taget, og PIN-koden passer ikke.",pinLocked:n=>"For mange forkerte PIN-koder. Prøv igen om "+n+" min.",pinBad:"PIN-koden skal være 4 cifre.",pinOffline:"Kunne ikke tjekke PIN-koden. Prøv igen.",pinBack:"Velkommen tilbage.",fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
+ da:{pinOn:"PIN sat: du kan logge ind på andre enheder.",pinOff:"Ingen PIN endnu: dit navn findes kun på denne enhed.",pinSet:"Vælg en PIN",pinOther:"Log ind som en anden",signOut:"Log ud på denne enhed",pinLabel:"PIN (4 cifre, valgfri)",pinHelp:"Tilføj en PIN for at beholde dit navn. På enhver enhed: skriv samme navn og PIN for at få din plads og dine point tilbage.",pinWrong:"Navnet er taget, og PIN-koden passer ikke.",pinLocked:n=>"For mange forkerte PIN-koder. Prøv igen om "+n+" min.",pinBad:"PIN-koden skal være 4 cifre.",pinOffline:"Kunne ikke tjekke PIN-koden. Prøv igen.",pinBack:"Velkommen tilbage.",fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
   invite:"Kopiér invitationslink",copied:"Link kopieret",copyPrompt:"Kopiér dette link til din ven:",undo:"Fortryd træk",confirmMove:"Bekræft træk",
   sitW:"Spil som Hvid",sitB:"Spil som Sort",newGameBtn:"Nyt spil",newYes:"Ja, nulstil brættet",cancel:"Annuller",
   vsComputer:"Spil mod computeren",backOnline:"Tilbage til onlinebordet",
@@ -942,8 +952,22 @@ function fillScores(){
     const cells=[(i+1)+". "+(k==="bot"?botLabel("bot:#4"):/^bot\d$/.test(k)?botLabel("bot:#"+k.slice(3)):(k===me&&myName?myName:r.name||t("guest")))+(k===me?" ("+t("seatYou")+")":""),r.pts,r.won,r.played];
     cells.forEach((v,j)=>{const td=document.createElement("td");td.textContent=v;if(j)td.className="num";tr.append(td)});tb.append(tr)});
 }
-function showMyName(){const el=document.getElementById("myNameTag");el.textContent=myName;el.hidden=!myName;el.title=t("changeName")}
-document.getElementById("myNameTag").onclick=()=>askName();
+const pinnedName=()=>{try{return localStorage.getItem("bg-pinned")||""}catch(e){return ""}};
+function showMyName(){const el=document.getElementById("myNameTag");el.textContent=(myName.trim()[0]||"?").toUpperCase();el.hidden=!myName;el.title=myName;el.setAttribute("aria-label",myName);
+  const pinned=pinnedName()&&pinnedName().toLowerCase()===myName.toLowerCase();
+  document.getElementById("acctName").textContent=myName;
+  document.getElementById("acctPin").textContent=t(pinned?"pinOn":"pinOff");
+  document.getElementById("acctPinBtn").textContent=t(pinned?"pinOther":"pinSet")}
+const acctBox=document.getElementById("acct"),acctBtn=document.getElementById("myNameTag");
+function closeAcct(){acctBox.hidden=true;acctBtn.setAttribute("aria-expanded","false")}
+acctBtn.onclick=e=>{e.stopPropagation();const open=acctBox.hidden;try{closePrefs()}catch(x){}acctBox.hidden=!open;acctBtn.setAttribute("aria-expanded",String(open))};
+document.addEventListener("click",e=>{if(!acctBox.hidden&&!acctBox.contains(e.target))closeAcct()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!acctBox.hidden){closeAcct();acctBtn.focus()}});
+document.getElementById("acctRename").onclick=()=>{closeAcct();askName()};
+document.getElementById("acctPinBtn").onclick=()=>{closeAcct();askName();setTimeout(()=>document.getElementById("pinInput").focus(),80)};
+document.getElementById("acctOut").onclick=()=>{closeAcct();
+  try{localStorage.removeItem("bg-player");localStorage.removeItem("bg-name");localStorage.removeItem("bg-pinned")}catch(e){}
+  me=playerId();myName="";showMyName();send({type:"hello",player:me,name:""});render();askName()};
 function askName(){
   const box=document.getElementById("nameInput");box.value=myName;document.getElementById("namePick").hidden=false;
   setTimeout(()=>box.focus(),50);
@@ -956,7 +980,7 @@ async function saveName(){
     if(!/^\d{4}$/.test(pin)||!v)return say(t("pinBad"));
     let r,j;try{r=await fetch("/api/player",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:v,pin,player:me})});j=await r.json()}catch(e){return say(t("pinOffline"))}
     if(r.status===403)return say(t("pinWrong"));if(r.status===429)return say(t("pinLocked",j.wait||10));if(!r.ok||!j.player)return say(t("pinOffline"));
-    v=j.name||v;pinEl.value="";
+    v=j.name||v;pinEl.value="";try{localStorage.setItem("bg-pinned",v)}catch(e){}
     if(j.player!==me){me=j.player;try{localStorage.setItem("bg-player",me)}catch(e){}}
   }
   if(!v)v=t("guest")+" "+String(me||"").slice(-3).toUpperCase();
@@ -1827,10 +1851,10 @@ document.querySelectorAll("[data-pref]").forEach(b=>b.addEventListener("change",
   prefs[b.dataset.pref]=b.checked;try{localStorage.setItem("bg-prefs",JSON.stringify(prefs))}catch(e){}applyPrefs();render()}));
 const gear=document.getElementById("gear"),prefsBox=document.getElementById("prefs");
 function closePrefs(){prefsBox.hidden=true;gear.setAttribute("aria-expanded","false")}
-gear.onclick=e=>{e.stopPropagation();const open=prefsBox.hidden;prefsBox.hidden=!open;gear.setAttribute("aria-expanded",String(open))};
+gear.onclick=e=>{e.stopPropagation();try{closeAcct()}catch(x){}const open=prefsBox.hidden;prefsBox.hidden=!open;gear.setAttribute("aria-expanded",String(open))};
 document.addEventListener("click",e=>{if(!prefsBox.hidden&&!prefsBox.contains(e.target))closePrefs()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!prefsBox.hidden){closePrefs();gear.focus()}});
-document.getElementById("nameChange").onclick=()=>{closePrefs();askName()};
+
 applyPrefs();
 const gtip=document.createElement("div");gtip.className="gtip";gtip.hidden=true;document.body.append(gtip);
 document.getElementById("pcBars").addEventListener("click",e=>{

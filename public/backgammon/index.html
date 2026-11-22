@@ -78,6 +78,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .sp-body{flex:1;min-height:0;overflow:auto;background:var(--panel);border-radius:6px}
 .sidepanel .sb{font-size:.74rem;color:var(--fg)}.sidepanel .sb th,.sidepanel .sb td{padding:4px 6px}
 @media (max-width:1000px){.sidepanel{display:none}}
+.gearrow{display:flex;gap:6px}
 .gearwrap{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .myname{border:0;background:none;padding:0;font:inherit;font-size:.78rem;font-weight:600;color:var(--fg);cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myname:hover{color:var(--accent)}
 .gear{display:grid;place-items:center;width:36px;height:36px;padding:0;border-radius:999px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
@@ -211,7 +212,8 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
     <span class="modewrap" id="modeWrap" tabindex="0"><span class="pill" id="mode">Connecting…</span><span class="obslist" id="obsList" role="tooltip"></span></span>
     <div class="gearwrap">
       <button id="myNameTag" class="myname" title="Change my name" hidden></button>
-      <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+      <span class="gearrow"><button id="fsBtn" class="gear" title="Full screen" aria-label="Full screen" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="fsIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
+      <button id="gear" class="gear" aria-haspopup="true" aria-expanded="false" aria-controls="prefs" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button></span>
       <div id="prefs" class="prefs" role="menu" hidden>
         <p class="prefs-h" data-t="prefShow">Show on the board</p>
         <label><input type="checkbox" data-pref="score"> <span data-t="prefScore">Scoreboard</span></label>
@@ -367,7 +369,7 @@ function legal(st){
 const name=c=>t(c==="w"?"white":"black");
 // ---------- Language: each viewer's own choice, kept on their device ----------
 const STR={
- en:{white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
+ en:{fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
   invite:"Copy invite link",copied:"Link copied",copyPrompt:"Copy this link for your friend:",undo:"Undo move",confirmMove:"Confirm move",
   sitW:"Sit as White",sitB:"Sit as Black",newGameBtn:"New game",newYes:"Yes, reset board",cancel:"Cancel",
   vsComputer:"Play vs computer",backOnline:"Back to online table",
@@ -407,7 +409,7 @@ const STR={
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
- da:{white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
+ da:{fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
   invite:"Kopiér invitationslink",copied:"Link kopieret",copyPrompt:"Kopiér dette link til din ven:",undo:"Fortryd træk",confirmMove:"Bekræft træk",
   sitW:"Spil som Hvid",sitB:"Spil som Sort",newGameBtn:"Nyt spil",newYes:"Ja, nulstil brættet",cancel:"Annuller",
   vsComputer:"Spil mod computeren",backOnline:"Tilbage til onlinebordet",
@@ -460,7 +462,18 @@ function applyStatic(){try{showMyName()}catch(e){}
   document.documentElement.lang=lang==="da"?"da":"en-AU";
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
   document.title=t("title");
+  try{fsSync()}catch(e){}
 }
+// Full-screen button (for tablets with no F11 key); hidden where the browser cannot do it
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+function fsSync(){const b=document.getElementById("fsBtn");if(!b)return;const d=document.documentElement;
+  b.hidden=!(d.requestFullscreen||d.webkitRequestFullscreen)||!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+  const on=!!fsEl(),lbl=t(on?"fsExit":"fsEnter");b.title=lbl;b.setAttribute("aria-label",lbl);
+  document.getElementById("fsIcon").setAttribute("d",on?"M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5":"M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5")}
+document.getElementById("fsBtn").addEventListener("click",()=>{const d=document.documentElement;
+  if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  else{const r=(d.requestFullscreen||d.webkitRequestFullscreen).call(d);if(r&&r.catch)r.catch(()=>{})}});
+document.addEventListener("fullscreenchange",fsSync);document.addEventListener("webkitfullscreenchange",fsSync);
 function setLang(l){lang=l;try{localStorage.setItem("bg-lang",l)}catch(e){}document.getElementById("langPick").hidden=true;applyStatic();applyTracker();render();if(!myName)askName()}
 
 function mine(c){return mode==="ai"?c==="w":(local||S.seats[c]===me)}

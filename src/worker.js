@@ -45,20 +45,37 @@ async function claim(req, db) {
     const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pin));
     return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
   };
-  const salt = crypto.randomUUID();
-  // a new name: INSERT wins only if nobody has it yet, so two devices can't both claim it
-  const ins = await db.prepare("INSERT OR IGNORE INTO players (name_key,name,player_id,salt,pin_hash,created_at,last_login) VALUES (?,?,?,?,?,?,?)")
-    .bind(key, name, player, salt, await hash(salt), now, now).run();
-  if (ins.meta.changes) return Response.json({ player, name, created: true });
-  const a = await db.prepare("SELECT * FROM players WHERE name_key=?").bind(key).first();
-  if (a.lock_until > now) return Response.json({ error: "locked", wait: Math.ceil((a.lock_until - now) / 60000) }, { status: 429 });
-  if ((await hash(a.salt)) !== a.pin_hash) {
-    await db.prepare("UPDATE players SET fails=CASE WHEN fails+1>=5 THEN 0 ELSE fails+1 END, lock_until=CASE WHEN fails+1>=5 THEN ? ELSE lock_until END WHERE name_key=?")
-      .bind(now + 10 * 60000, key).run();
-    return Response.json({ error: "wrong" }, { status: 403 });
+  // check a PIN against a stored player, counting wrong tries (5 wrong: locked 10 minutes)
+  const check = async (a) => {
+    if (a.lock_until > now) return Response.json({ error: "locked", wait: Math.ceil((a.lock_until - now) / 60000) }, { status: 429 });
+    if ((await hash(a.salt)) !== a.pin_hash) {
+      await db.prepare("UPDATE players SET fails=CASE WHEN fails+1>=5 THEN 0 ELSE fails+1 END, lock_until=CASE WHEN fails+1>=5 THEN ? ELSE lock_until END WHERE player_id=?")
+        .bind(now + 10 * 60000, a.player_id).run();
+      return Response.json({ error: "wrong" }, { status: 403 });
+    }
+    return null;
+  };
+  // 1. the name belongs to someone: the right PIN signs this device in as them
+  const owner = await db.prepare("SELECT * FROM players WHERE name_key=?").bind(key).first();
+  if (owner) {
+    const bad = await check(owner); if (bad) return bad;
+    await db.prepare("UPDATE players SET fails=0, last_login=? WHERE player_id=?").bind(now, owner.player_id).run();
+    return Response.json({ player: owner.player_id, name: owner.name, created: false });
   }
-  await db.prepare("UPDATE players SET fails=0, last_login=? WHERE name_key=?").bind(now, key).run();
-  return Response.json({ player: a.player_id, name: a.name, created: false });
+  // 2. this player already has a name and the name is free: their PIN renames them (same id, same PIN)
+  const self = await db.prepare("SELECT * FROM players WHERE player_id=?").bind(player).first();
+  if (self) {
+    const bad = await check(self); if (bad) return bad;
+    const up = await db.prepare("UPDATE OR IGNORE players SET name_key=?, name=?, fails=0, last_login=? WHERE player_id=?").bind(key, name, now, player).run();
+    if (!up.meta.changes) return Response.json({ error: "busy" }, { status: 409 });
+    return Response.json({ player, name, created: false, renamed: true });
+  }
+  // 3. a new player with a new name
+  const salt = crypto.randomUUID();
+  const ins = await db.prepare("INSERT OR IGNORE INTO players (player_id,name_key,name,salt,pin_hash,created_at,last_login) VALUES (?,?,?,?,?,?,?)")
+    .bind(player, key, name, salt, await hash(salt), now, now).run();
+  if (!ins.meta.changes) return Response.json({ error: "busy" }, { status: 409 });
+  return Response.json({ player, name, created: true });
 }
 
 export class GameRoom {

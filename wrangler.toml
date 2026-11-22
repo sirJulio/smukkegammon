@@ -16,6 +16,12 @@ class_name = "GameRoom"
 tag = "v1"
 new_sqlite_classes = ["GameRoom"]
 
+# Players (name + PIN). Table "players"; see claim() in src/worker.js
+[[d1_databases]]
+binding = "DB"
+database_name = "smukkegammon-players"
+database_id = "5248c26d-1a38-4ee0-82bb-e6a8c0a8bcaf"
+
 # Sandbox: the "sandbox" branch deploys here (its own Worker and its own rooms, on workers.dev),
 # so new features can be tried without touching games.jdunne.au.
 [env.sandbox]
@@ -24,3 +30,8 @@ name = "games-jdunne-sandbox"
 [[env.sandbox.durable_objects.bindings]]
 name = "ROOMS"
 class_name = "GameRoom"
+
+[[env.sandbox.d1_databases]]
+binding = "DB"
+database_name = "smukkegammon-players-sandbox"
+database_id = "93262e44-7df2-4187-b17c-7a9b35dea797"

@@ -18,12 +18,42 @@ export default {
       return stub.fetch(req);
     }
     if (url.pathname === "/api/player" && req.method === "POST") {
-      // one shared Durable Object holds every name+PIN, so a player is the same in every room and on every device
-      return env.ROOMS.get(env.ROOMS.idFromName("__players__")).fetch(req);
+      return claim(req, env.DB);
     }
     return env.ASSETS.fetch(req);
   },
 };
+
+// Name + 4-digit PIN, kept in the D1 database (table "players"). The first person to save a name with a PIN
+// owns it; anyone who later gives the same name and PIN gets that player's id back, so seats, scores and
+// history follow them to any device and room. 5 wrong PINs lock the name for 10 minutes.
+async function claim(req, db) {
+  let b;
+  try { b = await req.json(); } catch { return new Response("Bad request", { status: 400 }); }
+  const name = typeof b.name === "string" ? b.name.trim().replace(/\s+/g, " ").slice(0, 20) : "";
+  const pin = String(b.pin || "");
+  const player = typeof b.player === "string" ? b.player.slice(0, 64) : "";
+  if (!name || !/^\d{4}$/.test(pin) || !player) return Response.json({ error: "bad" }, { status: 400 });
+  const key = name.toLowerCase(), now = Date.now();
+  const hash = async (salt) => {
+    const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pin));
+    return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  };
+  const salt = crypto.randomUUID();
+  // a new name: INSERT wins only if nobody has it yet, so two devices can't both claim it
+  const ins = await db.prepare("INSERT OR IGNORE INTO players (name_key,name,player_id,salt,pin_hash,created_at,last_login) VALUES (?,?,?,?,?,?,?)")
+    .bind(key, name, player, salt, await hash(salt), now, now).run();
+  if (ins.meta.changes) return Response.json({ player, name, created: true });
+  const a = await db.prepare("SELECT * FROM players WHERE name_key=?").bind(key).first();
+  if (a.lock_until > now) return Response.json({ error: "locked", wait: Math.ceil((a.lock_until - now) / 60000) }, { status: 429 });
+  if ((await hash(a.salt)) !== a.pin_hash) {
+    await db.prepare("UPDATE players SET fails=CASE WHEN fails+1>=5 THEN 0 ELSE fails+1 END, lock_until=CASE WHEN fails+1>=5 THEN ? ELSE lock_until END WHERE name_key=?")
+      .bind(now + 10 * 60000, key).run();
+    return Response.json({ error: "wrong" }, { status: 403 });
+  }
+  await db.prepare("UPDATE players SET fails=0, last_login=? WHERE name_key=?").bind(now, key).run();
+  return Response.json({ player: a.player_id, name: a.name, created: false });
+}
 
 export class GameRoom {
   constructor(ctx, env) {
@@ -33,7 +63,6 @@ export class GameRoom {
 
   async fetch(req) {
     const url = new URL(req.url);
-    if (url.pathname === "/api/player") return this.claim(req);
     if (url.pathname.endsWith("/state")) {
       const state = (await this.ctx.storage.get("state")) || null;
       const rev = (await this.ctx.storage.get("rev")) || 0;
@@ -132,39 +161,6 @@ export class GameRoom {
       for (const old of hist.slice(1000)) if (old.file) await this.ctx.storage.delete("mat:" + old.id);
       await this.ctx.storage.put("history", hist.slice(0, 1000));
     }
-  }
-
-  // Name + 4-digit PIN. The first person to save a name with a PIN owns it; anyone who later gives the
-  // same name and PIN gets that player's id back, so their seats, scores and history follow them.
-  async claim(req) {
-    let b;
-    try { b = await req.json(); } catch { return new Response("Bad request", { status: 400 }); }
-    const name = typeof b.name === "string" ? b.name.trim().replace(/\s+/g, " ").slice(0, 20) : "";
-    const pin = String(b.pin || "");
-    const player = typeof b.player === "string" ? b.player.slice(0, 64) : "";
-    if (!name || !/^\d{4}$/.test(pin) || !player) return Response.json({ error: "bad" }, { status: 400 });
-    const key = "acct:" + name.toLowerCase();
-    const now = Date.now();
-    const a = await this.ctx.storage.get(key);
-    const hash = async (salt) => {
-      const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pin));
-      return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-    };
-    if (!a) {
-      const salt = crypto.randomUUID();
-      await this.ctx.storage.put(key, { name, salt, hash: await hash(salt), player, fails: 0, lockUntil: 0, created: now });
-      return Response.json({ player, name, created: true });
-    }
-    if (a.lockUntil > now) return Response.json({ error: "locked", wait: Math.ceil((a.lockUntil - now) / 60000) }, { status: 429 });
-    if ((await hash(a.salt)) !== a.hash) {
-      a.fails = (a.fails || 0) + 1;
-      if (a.fails >= 5) { a.fails = 0; a.lockUntil = now + 10 * 60000; } // 5 wrong PINs: locked for 10 minutes
-      await this.ctx.storage.put(key, a);
-      return Response.json({ error: "wrong" }, { status: 403 });
-    }
-    a.fails = 0;
-    await this.ctx.storage.put(key, a);
-    return Response.json({ player: a.player, name: a.name, created: false });
   }
 
   webSocketClose() { this.broadcastPresence(); }

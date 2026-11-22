@@ -247,6 +247,10 @@ body[data-board="danish"]{--felt:#ece5d8; --wood:#cdb38c; --pa:#9fb3bc; --pb:#c7
       <p class="resHead" data-t="nameTitle">Your name</p>
       <p class="resSub" data-t="nameHelp">Shown to others in this room and on the scoreboard.</p>
       <input id="nameInput" maxlength="20" autocomplete="nickname" style="font:inherit;font-size:1.1rem;padding:10px 12px;border-radius:8px;border:1px solid var(--muted);background:var(--bg);color:var(--fg)">
+      <label class="resSub" for="pinInput" data-t="pinLabel" style="margin-top:10px">PIN (4 digits, optional)</label>
+      <input id="pinInput" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" style="font:inherit;font-size:1.1rem;padding:10px 12px;border-radius:8px;border:1px solid var(--muted);background:var(--bg);color:var(--fg);letter-spacing:.3em;width:7em;justify-self:center">
+      <p class="resSub" data-t="pinHelp">Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.</p>
+      <p class="resSub" id="pinMsg" role="alert" style="color:var(--accent)" hidden></p>
       <div class="controls" style="justify-content:center"><button class="primary" type="submit" data-t="save">Save</button></div>
     </form>
   </div>
@@ -373,7 +377,7 @@ function legal(st){
 const name=c=>t(c==="w"?"white":"black");
 // ---------- Language: each viewer's own choice, kept on their device ----------
 const STR={
- en:{fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
+ en:{pinLabel:"PIN (4 digits, optional)",pinHelp:"Add a PIN to keep your name. On any device, enter the same name and PIN to get your seat and scores back.",pinWrong:"That name is taken and the PIN doesn't match.",pinLocked:n=>"Too many wrong PINs. Try again in "+n+" min.",pinBad:"The PIN must be 4 digits.",pinOffline:"Couldn't check the PIN. Try again.",pinBack:"Welcome back.",fsEnter:"Full screen",fsExit:"Exit full screen",white:"White",black:"Black",title:"SmukkeGammon",allGames:"← All games",pips:"pips",again:"Play again",look:"View board",room:"Room",
   invite:"Copy invite link",copied:"Link copied",copyPrompt:"Copy this link for your friend:",undo:"Undo move",confirmMove:"Confirm move",
   sitW:"Sit as White",sitB:"Sit as Black",newGameBtn:"New game",newYes:"Yes, reset board",cancel:"Cancel",
   vsComputer:"Play vs computer",backOnline:"Back to online table",
@@ -413,7 +417,7 @@ const STR={
   kindsingle:"A single game",kindgammon:"A gammon",kindbackgammon:"A backgammon",
   worth:n=>", worth "+n+(n===1?" point. ":" points. "),boreOff:(l,n)=>l+" bore off "+n+" of 15 checkers.",You:"You",
   autoFinish:"Auto finish",stopAuto:"Stop auto finish",autoOn:c=>"The computer is finishing the race for "+c+".",thinking:"Computer is thinking…",compPlayed:p=>"Computer played "+p+"."},
- da:{fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
+ da:{pinLabel:"PIN (4 cifre, valgfri)",pinHelp:"Tilføj en PIN for at beholde dit navn. På enhver enhed: skriv samme navn og PIN for at få din plads og dine point tilbage.",pinWrong:"Navnet er taget, og PIN-koden passer ikke.",pinLocked:n=>"For mange forkerte PIN-koder. Prøv igen om "+n+" min.",pinBad:"PIN-koden skal være 4 cifre.",pinOffline:"Kunne ikke tjekke PIN-koden. Prøv igen.",pinBack:"Velkommen tilbage.",fsEnter:"Fuld skærm",fsExit:"Afslut fuld skærm",white:"Hvid",black:"Sort",title:"SmukkeGammon",allGames:"← Alle spil",pips:"pips",again:"Spil igen",look:"Se brættet",room:"Rum",
   invite:"Kopiér invitationslink",copied:"Link kopieret",copyPrompt:"Kopiér dette link til din ven:",undo:"Fortryd træk",confirmMove:"Bekræft træk",
   sitW:"Spil som Hvid",sitB:"Spil som Sort",newGameBtn:"Nyt spil",newYes:"Ja, nulstil brættet",cancel:"Annuller",
   vsComputer:"Spil mod computeren",backOnline:"Tilbage til onlinebordet",
@@ -944,8 +948,17 @@ function askName(){
   const box=document.getElementById("nameInput");box.value=myName;document.getElementById("namePick").hidden=false;
   setTimeout(()=>box.focus(),50);
 }
-function saveName(){
+async function saveName(){
   let v=document.getElementById("nameInput").value.trim().replace(/\s+/g," ").slice(0,20);
+  const pinEl=document.getElementById("pinInput"),pin=pinEl.value.trim(),pm=document.getElementById("pinMsg");pm.hidden=true;
+  if(pin){
+    const say=m=>{pm.textContent=m;pm.hidden=false};
+    if(!/^\d{4}$/.test(pin)||!v)return say(t("pinBad"));
+    let r,j;try{r=await fetch("/api/player",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:v,pin,player:me})});j=await r.json()}catch(e){return say(t("pinOffline"))}
+    if(r.status===403)return say(t("pinWrong"));if(r.status===429)return say(t("pinLocked",j.wait||10));if(!r.ok||!j.player)return say(t("pinOffline"));
+    v=j.name||v;pinEl.value="";
+    if(j.player!==me){me=j.player;try{localStorage.setItem("bg-player",me)}catch(e){}}
+  }
   if(!v)v=t("guest")+" "+String(me||"").slice(-3).toUpperCase();
   myName=v;try{localStorage.setItem("bg-name",v)}catch(e){}
   document.getElementById("namePick").hidden=true;showMyName();

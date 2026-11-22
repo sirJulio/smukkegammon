@@ -2,6 +2,7 @@
 // /api/room/<code>/ws  → WebSocket into that room
 // /api/room/<code>/history → JSON list of finished games in that room
 // /api/room/<code>/state   → the current board, read-only (for checking a room from outside)
+// /api/player          → POST {name,pin,player}: claim a name with a 4-digit PIN, or get back the player id it belongs to
 // /api/room/<code>/game/<id>.mat → one finished game's log in .mat format (GNU Backgammon / eXtreme Gammon)
 
 const CODE = /^[a-z0-9-]{3,40}$/;
@@ -16,6 +17,10 @@ export default {
       const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
       return stub.fetch(req);
     }
+    if (url.pathname === "/api/player" && req.method === "POST") {
+      // one shared Durable Object holds every name+PIN, so a player is the same in every room and on every device
+      return env.ROOMS.get(env.ROOMS.idFromName("__players__")).fetch(req);
+    }
     return env.ASSETS.fetch(req);
   },
 };
@@ -28,6 +33,7 @@ export class GameRoom {
 
   async fetch(req) {
     const url = new URL(req.url);
+    if (url.pathname === "/api/player") return this.claim(req);
     if (url.pathname.endsWith("/state")) {
       const state = (await this.ctx.storage.get("state")) || null;
       const rev = (await this.ctx.storage.get("rev")) || 0;
@@ -126,6 +132,39 @@ export class GameRoom {
       for (const old of hist.slice(1000)) if (old.file) await this.ctx.storage.delete("mat:" + old.id);
       await this.ctx.storage.put("history", hist.slice(0, 1000));
     }
+  }
+
+  // Name + 4-digit PIN. The first person to save a name with a PIN owns it; anyone who later gives the
+  // same name and PIN gets that player's id back, so their seats, scores and history follow them.
+  async claim(req) {
+    let b;
+    try { b = await req.json(); } catch { return new Response("Bad request", { status: 400 }); }
+    const name = typeof b.name === "string" ? b.name.trim().replace(/\s+/g, " ").slice(0, 20) : "";
+    const pin = String(b.pin || "");
+    const player = typeof b.player === "string" ? b.player.slice(0, 64) : "";
+    if (!name || !/^\d{4}$/.test(pin) || !player) return Response.json({ error: "bad" }, { status: 400 });
+    const key = "acct:" + name.toLowerCase();
+    const now = Date.now();
+    const a = await this.ctx.storage.get(key);
+    const hash = async (salt) => {
+      const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pin));
+      return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    };
+    if (!a) {
+      const salt = crypto.randomUUID();
+      await this.ctx.storage.put(key, { name, salt, hash: await hash(salt), player, fails: 0, lockUntil: 0, created: now });
+      return Response.json({ player, name, created: true });
+    }
+    if (a.lockUntil > now) return Response.json({ error: "locked", wait: Math.ceil((a.lockUntil - now) / 60000) }, { status: 429 });
+    if ((await hash(a.salt)) !== a.hash) {
+      a.fails = (a.fails || 0) + 1;
+      if (a.fails >= 5) { a.fails = 0; a.lockUntil = now + 10 * 60000; } // 5 wrong PINs: locked for 10 minutes
+      await this.ctx.storage.put(key, a);
+      return Response.json({ error: "wrong" }, { status: 403 });
+    }
+    a.fails = 0;
+    await this.ctx.storage.put(key, a);
+    return Response.json({ player: a.player, name: a.name, created: false });
   }
 
   webSocketClose() { this.broadcastPresence(); }

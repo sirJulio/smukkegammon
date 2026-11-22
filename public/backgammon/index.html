@@ -1636,25 +1636,28 @@ function gnubg(){
 }
 function gbAnalyse(mat,progress){return new Promise((resolve,reject)=>{const id=++gbSeq;gbJobs.set(id,{resolve,reject,progress});gnubg().postMessage({id,kind:"analyse",mat,plies:2})})}
 // Read gnubg's text export: one entry per checker play or cube decision, with the equity lost.
-// In the import, the left column (White) is called "gnubg" and the right (Black) "somebody".
-function parseAnalysis(text){
-  const col=n=>n==="gnubg"?"w":"b",out=[];
+// gnubg names each player from the .mat header (Player 1 = White, Player 2 = Black); older imports fell back to "gnubg" (White) and "somebody" (Black).
+function parseAnalysis(text,names){
+  const wn=names&&names.w,bn=names&&names.b;
+  const who=h=>{if(wn&&h.startsWith(wn+" "))return["w",h.slice(wn.length+1)];if(bn&&h.startsWith(bn+" "))return["b",h.slice(bn.length+1)];
+    const r=/^(\S+) (.*)$/.exec(h)||["",h,""];return[r[1]==="gnubg"?"w":"b",r[2]]};
+  const out=[];
   text.split(/\nMove number \d+:\s+/).slice(1).forEach(blk=>{
     const head=blk.split("\n")[0];let m;
     const eq={};blk.replace(/^\s*\d\. (No double|No redouble|Double, take|Double, pass|Redouble, take|Redouble, pass)\s+([+-]\d+\.\d+)/gm,(_,k,v)=>{eq[k.replace("Redouble","Double").replace("No redouble","No double")]=+v});
     const ND=eq["No double"],DT=eq["Double, take"],DP=eq["Double, pass"],haveCube=ND!=null&&DT!=null&&DP!=null;
     const best=haveCube?Math.max(ND,Math.min(DT,DP)):null,bestName=haveCube?(best===ND?"cubeNoDouble":"cubeDouble"):null;
-    if((m=/^(\S+) to play (\d)(\d)/.exec(head))){
-      const c=col(m[1]);
+    const [c,rest]=who(head);
+    if((m=/^to play (\d)(\d)/.exec(rest))){
       if(haveCube&&best-ND>=0.04)out.push({kind:"cube",c,loss:best-ND,chose:"cubeNoDouble",better:"cubeDouble"});
       const lines=blk.split("\n"),pi=lines.findIndex(l=>/^\*\s+\d+\./.test(l)),b1=lines.find(l=>/^[* ]\s+1\./.test(l));
       const play=x=>x?x.replace(/^[* ]\s+\d+\.\s+Cubeful \d-ply\s+/,"").replace(/\s+Eq\..*$/,"").trim():"";
       let loss=0;if(pi>=0){const r=/\(\s*([+-]\d+\.\d+)\)\s*$/.exec(lines[pi]);if(r)loss=-+r[1]}
-      out.push({kind:"move",c,dice:m[2]+m[3],loss:Math.max(0,loss),played:pi>=0?play(lines[pi]):"",best:play(b1)});
-    }else if((m=/^(\S+) on roll, cube decision\?/.exec(head))){
-      const c=col(m[1]);if(haveCube&&best-ND>=0.04)out.push({kind:"cube",c,loss:best-ND,chose:"cubeNoDouble",better:"cubeDouble"});
-    }else if((m=/^(\S+) doubles/.exec(head))&&haveCube){
-      const doubler=col(m[1]),taker=doubler==="w"?"b":"w";
+      out.push({kind:"move",c,dice:m[1]+m[2],loss:Math.max(0,loss),played:pi>=0?play(lines[pi]):"",best:play(b1)});
+    }else if(/^on roll, cube decision\?/.test(rest)){
+      if(haveCube&&best-ND>=0.04)out.push({kind:"cube",c,loss:best-ND,chose:"cubeNoDouble",better:"cubeDouble"});
+    }else if(/^doubles/.test(rest)&&haveCube){
+      const doubler=c,taker=doubler==="w"?"b":"w";
       if(/^\* \S+ doubles/m.test(blk)||true){const l=best-Math.min(DT,DP);if(l>=0.04)out.push({kind:"cube",c:doubler,loss:l,chose:"cubeDouble",better:"cubeNoDouble"})}
       const took=/^\* \S+ accepts/m.test(blk),passed=/^\* \S+ (rejects|passes|declines)/m.test(blk);
       if(took&&DT-DP>=0.04)out.push({kind:"cube",c:taker,loss:DT-DP,chose:"cubeTake",better:"cubePass"});
@@ -1684,8 +1687,9 @@ async function analyseGame(){
     body.innerHTML="";renderAnalysis(body,r,rec);
   }catch(e){body.innerHTML="";msg(t("anaFail",e.message))}
 }
+const q_=x=>String(x).replace(/"/g,"'"); // same quote-swap matFile uses in the header
 function renderAnalysis(body,r,rec){
-  const names={w:rec.players.white,b:rec.players.black},items=parseAnalysis(r.text),st=parseStats(r.stats);
+  const names={w:rec.players.white,b:rec.players.black},items=parseAnalysis(r.text,{w:q_(rec.players.white),b:q_(rec.players.black)}),st=parseStats(r.stats);
   const tbl=document.createElement("table"),hr=document.createElement("tr");
   [t("anaPlayer"),t("anaErrRate"),t("anaRating"),t("anaMarks"),t("anaCube"),t("anaLuck")].forEach((h,i)=>{const th=document.createElement("th");th.textContent=h;if(i===1||i===3||i===4)th.className="num";hr.append(th)});tbl.append(hr);
   ["w","b"].forEach((c,ci)=>{const tr=document.createElement("tr");

@@ -7,17 +7,21 @@
 <meta name="description" content="Draw names for a Kris Kringle (Secret Santa). Share one link; everyone finds out who they're buying for.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Mountains+of+Christmas:wght@700&family=Inter:wght@400;600&display=swap">
 <style>
 :root{
-  --bg:#f4efe6; --fg:#22201c; --muted:#6b645a; --panel:#fffdf8; --line:#e2d9c9;
-  --red:#9e2a2b; --green:#2f5d4a; --gold:#b8892f; --accent:#9e2a2b; --soft:#f7ece9;
-  --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+  --bg:#efe4cf; --fg:#2a1d14; --muted:#6e5a47; --panel:#fffaf0; --line:#dcc8a6;
+  --red:#b3262d; --green:#1f5c3f; --gold:#c99a2e; --accent:#b3262d; --soft:#fbe9e3;
+  --wood1:#5a3a22; --wood2:#4b2f1b; --wall:#173d2b;
+  --display:"Mountains of Christmas","Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root{--bg:#171513; --fg:#ece6dc; --muted:#a59c8f; --panel:#211e1b; --line:#38322c; --red:#e07a6f; --green:#7fbf9f; --gold:#e0b45e; --accent:#e07a6f; --soft:#2b2220; color-scheme:dark}}
+@media (prefers-color-scheme:dark){:root{--bg:#1d140e; --fg:#f3e9d8; --muted:#c3ad91; --panel:#2a1d15; --line:#4a3524; --red:#ef7b6e; --green:#7cc79d; --gold:#e8c063; --accent:#ef7b6e; --soft:#3a221c; --wall:#0e271b; color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);
+body{background:
+    radial-gradient(ellipse at 50% 0,rgba(255,214,120,.18),transparent 60%),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.10) 0 2px,transparent 2px 120px),
+    linear-gradient(var(--wall),var(--wall));background-attachment:fixed;color:var(--fg);font:15px/1.5 var(--body);
   padding:max(24px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
 .wrap{max-width:860px;margin:0 auto;display:grid;gap:18px}
 a{color:var(--accent)}
@@ -67,14 +71,75 @@ tr.mine td{background:var(--soft)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (max-width:560px){.hide-sm{display:none}}
+/* ---------- Elf's workshop theme ---------- */
+.wrap{position:relative;z-index:1}
+.home{color:#f3e2bf;justify-self:center;margin-top:6px}
+h1{margin-bottom:10px!important}
+.home:hover{color:#fff}
+.lights{position:fixed;top:0;left:0;right:0;height:34px;pointer-events:none;z-index:2}
+.lights svg{width:100%;height:100%}
+.bulb{animation:twinkle 2.4s ease-in-out infinite}
+.bulb:nth-child(3n){animation-delay:.8s}.bulb:nth-child(3n+1){animation-delay:1.6s}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.35}}
+.mistletoe{position:fixed;top:0;width:clamp(90px,18vw,150px);pointer-events:none;z-index:3}
+.mistletoe.l{left:0}.mistletoe.r{right:0;transform:scaleX(-1)}
+.bench{position:relative;background:linear-gradient(var(--wood1),var(--wood2));border-radius:14px;padding:14px 16px 0;
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.35);display:flex;align-items:flex-end;gap:12px;overflow:hidden;min-height:128px;margin-top:22px}
+.bench .sign{flex:1;color:#f6e7c8;padding-bottom:16px}
+.bench .sign strong{font-family:var(--display);font-size:clamp(1.6rem,6vw,2.4rem);line-height:1;display:block;color:#ffe9a8;text-shadow:0 2px 0 #7a1c1c}
+.bench .sign span{font-size:.85rem;opacity:.85}
+.elf{width:clamp(150px,34vw,220px);flex:none;display:block}
+.elf .arm{transform-origin:118px 78px;animation:hammer .9s cubic-bezier(.5,0,.6,1) infinite}
+.elf .spark{opacity:0;animation:spark .9s infinite}
+.elf .toy{animation:bump .9s infinite;transform-origin:150px 104px}
+@keyframes hammer{0%,100%{transform:rotate(-55deg)}45%{transform:rotate(-55deg)}70%{transform:rotate(12deg)}80%{transform:rotate(4deg)}}
+@keyframes spark{0%,68%{opacity:0;transform:scale(.4)}74%{opacity:1;transform:scale(1)}90%,100%{opacity:0;transform:scale(1.3)}}
+@keyframes bump{0%,68%,100%{transform:none}74%{transform:scaleY(.9)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;position:relative;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);border-top:5px solid var(--green)}
+.panel:nth-of-type(even){border-top-color:var(--red)}
+.panel.hl{border-color:var(--accent);border-top:5px solid var(--red);background:var(--soft)}
+.panel.ok{border-color:var(--green)}
+#app > header, #app header{background:var(--panel);border-radius:12px;padding:14px 18px;border:2px dashed var(--gold);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+h1{color:var(--red)}
+h2{color:var(--green)}
+h1::before{content:"🎄 "}
+button.primary,.btn.primary{background:repeating-linear-gradient(135deg,var(--red) 0 10px,#c8333a 10px 20px);border-color:#7d1a1f;box-shadow:0 2px 0 #7d1a1f}
+button,.btn{border-radius:10px}
+tr.mine td{background:var(--soft)}
+th{color:var(--green)}
+.snow{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.snow i{position:absolute;top:-10px;color:#fff;opacity:.7;font-style:normal;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(105vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.elf *,.bulb,.snow{animation:none!important}.snow{display:none}}
 </style>
 </head>
 <body>
+<div class="lights" aria-hidden="true"><svg viewBox="0 0 400 34" preserveAspectRatio="none"><path d="M0 4 Q50 22 100 4 T200 4 T300 4 T400 4" stroke="#2b2b2b" stroke-width="1.2" fill="none"/><circle class="bulb" cx="25" cy="12" r="4" fill="#e53935"/><circle class="bulb" cx="50" cy="8" r="4" fill="#43a047"/><circle class="bulb" cx="75" cy="12" r="4" fill="#fdd835"/><circle class="bulb" cx="100" cy="8" r="4" fill="#1e88e5"/><circle class="bulb" cx="125" cy="12" r="4" fill="#e53935"/><circle class="bulb" cx="150" cy="8" r="4" fill="#43a047"/><circle class="bulb" cx="175" cy="12" r="4" fill="#fdd835"/><circle class="bulb" cx="200" cy="8" r="4" fill="#1e88e5"/><circle class="bulb" cx="225" cy="12" r="4" fill="#e53935"/><circle class="bulb" cx="250" cy="8" r="4" fill="#43a047"/><circle class="bulb" cx="275" cy="12" r="4" fill="#fdd835"/><circle class="bulb" cx="300" cy="8" r="4" fill="#1e88e5"/><circle class="bulb" cx="325" cy="12" r="4" fill="#e53935"/><circle class="bulb" cx="350" cy="8" r="4" fill="#43a047"/><circle class="bulb" cx="375" cy="12" r="4" fill="#fdd835"/></svg></div>
+<div class="mistletoe l" aria-hidden="true"><svg viewBox="0 0 150 150" aria-hidden="true"><path d="M0 0 C40 10 60 30 70 62" stroke="#3b6b2a" stroke-width="3" fill="none"/>
+<g fill="#4f8a35" stroke="#2e5a1f" stroke-width="1.5"><ellipse cx="45" cy="52" rx="26" ry="10" transform="rotate(30 45 52)"/><ellipse cx="88" cy="60" rx="26" ry="10" transform="rotate(-25 88 60)"/><ellipse cx="62" cy="90" rx="24" ry="9" transform="rotate(75 62 90)"/><ellipse cx="30" cy="22" rx="20" ry="8" transform="rotate(10 30 22)"/></g>
+<g fill="#f7f4ea" stroke="#c9c2ad"><circle cx="68" cy="64" r="6"/><circle cx="77" cy="70" r="5.5"/><circle cx="64" cy="73" r="5"/></g>
+<path d="M60 58 q-14 -6 -20 4 q12 6 20 -4zm12 0 q14 -8 22 2 q-12 8 -22 -2z" fill="#b3262d"/><circle cx="66" cy="58" r="4" fill="#8e1c22"/></svg></div><div class="mistletoe r" aria-hidden="true"><svg viewBox="0 0 150 150" aria-hidden="true"><path d="M0 0 C40 10 60 30 70 62" stroke="#3b6b2a" stroke-width="3" fill="none"/>
+<g fill="#4f8a35" stroke="#2e5a1f" stroke-width="1.5"><ellipse cx="45" cy="52" rx="26" ry="10" transform="rotate(30 45 52)"/><ellipse cx="88" cy="60" rx="26" ry="10" transform="rotate(-25 88 60)"/><ellipse cx="62" cy="90" rx="24" ry="9" transform="rotate(75 62 90)"/><ellipse cx="30" cy="22" rx="20" ry="8" transform="rotate(10 30 22)"/></g>
+<g fill="#f7f4ea" stroke="#c9c2ad"><circle cx="68" cy="64" r="6"/><circle cx="77" cy="70" r="5.5"/><circle cx="64" cy="73" r="5"/></g>
+<path d="M60 58 q-14 -6 -20 4 q12 6 20 -4zm12 0 q14 -8 22 2 q-12 8 -22 -2z" fill="#b3262d"/><circle cx="66" cy="58" r="4" fill="#8e1c22"/></svg></div>
+<div class="snow" id="snow" aria-hidden="true"></div>
 <div class="wrap">
   <a class="home" href="/">← Games</a>
+  <div class="bench"><div class="sign"><strong>Santa's Workshop</strong><span>Kris Kringle draws, made by elves</span></div><svg class="elf" viewBox="0 0 220 130" role="img" aria-label="An elf hammering a toy at a workbench">
+<rect x="0" y="108" width="220" height="22" fill="#7b5230"/><rect x="0" y="108" width="220" height="4" fill="#9a6a3e"/>
+<g class="toy"><rect x="136" y="84" width="30" height="24" rx="3" fill="#1f5c3f"/><rect x="148" y="84" width="6" height="24" fill="#c99a2e"/><path d="M151 84 q-10 -12 -2 -12 q4 0 2 12 q0 -12 4 -12 q8 0 -4 12z" fill="#c99a2e"/></g>
+<g class="spark" style="transform-origin:150px 82px"><path d="M150 70 l3 8 8 -2 -6 6 6 6 -8 -2 -3 8 -3 -8 -8 2 6 -6 -6 -6 8 2z" fill="#ffd34d"/></g>
+<rect x="74" y="80" width="40" height="30" rx="8" fill="#b3262d"/><rect x="74" y="92" width="40" height="5" fill="#2a1d14"/><rect x="90" y="91" width="8" height="7" fill="#c99a2e"/>
+<circle cx="94" cy="64" r="16" fill="#f4c9a0"/><path d="M78 66 l-8 -6 9 0z M110 66 l8 -6 -9 0z" fill="#f4c9a0"/>
+<circle cx="89" cy="64" r="2" fill="#2a1d14"/><circle cx="100" cy="64" r="2" fill="#2a1d14"/><path d="M89 71 q5 4 10 0" stroke="#2a1d14" stroke-width="1.6" fill="none"/><circle cx="86" cy="69" r="2.5" fill="#f19a8a" opacity=".7"/><circle cx="103" cy="69" r="2.5" fill="#f19a8a" opacity=".7"/>
+<path d="M76 56 Q94 40 112 56 Q100 30 70 20 Q84 36 76 56z" fill="#1f5c3f"/><rect x="76" y="52" width="36" height="7" rx="3.5" fill="#fff"/><circle cx="70" cy="20" r="5" fill="#fff"/>
+<g class="arm"><rect x="112" y="74" width="26" height="8" rx="4" fill="#b3262d"/><circle cx="140" cy="78" r="5" fill="#f4c9a0"/><rect x="138" y="58" width="4" height="30" rx="2" fill="#8a5a2b" transform="rotate(90 140 78)"/><rect x="160" y="70" width="10" height="17" rx="2" fill="#555b66"/></g>
+<rect x="66" y="84" width="10" height="8" rx="4" fill="#b3262d"/><circle cx="68" cy="94" r="5" fill="#f4c9a0"/></svg></div>
   <div id="app"><p class="muted">Loading…</p></div>
 </div>
 <div class="toast" id="toast"></div>
+<script>(function(){const s=document.getElementById("snow");if(!s||matchMedia("(prefers-reduced-motion: reduce)").matches)return;for(let i=0;i<22;i++){const f=document.createElement("i");f.textContent="❄";f.style.left=Math.random()*100+"%";f.style.fontSize=(8+Math.random()*10)+"px";f.style.animationDuration=(9+Math.random()*10)+"s";f.style.animationDelay=(-Math.random()*18)+"s";s.appendChild(f);}})();</script>
 <script src="qrcode.js"></script>
 <script>
 "use strict";

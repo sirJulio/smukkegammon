@@ -4,7 +4,11 @@
 // /api/room/<code>/state   → the current board, read-only (for checking a room from outside)
 // /api/player          → POST {name,pin,player}: claim a name with a 4-digit PIN, or get back the player id it belongs to
 // /api/player/<id>/games → JSON list of that player's finished games, across all rooms (newest first)
+// /api/kk/...           → Kris Kringle events (see src/kk.js)
 // /api/room/<code>/game/<id>.mat → one finished game's log in .mat format (GNU Backgammon / eXtreme Gammon)
+
+import { kkRoute, KKEvent } from "./kk.js";
+export { KKEvent };
 
 const CODE = /^[a-z0-9-]{3,40}$/;
 
@@ -22,6 +26,10 @@ export default {
     if (pg) {
       const { results } = await env.DB.prepare("SELECT * FROM games WHERE white_id=?1 OR black_id=?1 ORDER BY finished DESC LIMIT 500").bind(pg[1]).all();
       return Response.json(results, { headers: { "cache-control": "no-store" } });
+    }
+    if (url.pathname.startsWith("/api/kk/")) {
+      const r = await kkRoute(req, env, url);
+      if (r) return r;
     }
     if (url.pathname === "/api/player" && req.method === "POST") {
       return claim(req, env.DB);

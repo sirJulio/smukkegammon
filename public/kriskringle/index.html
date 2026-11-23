@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kris Kringle · games.jdunne.au</title>
+<meta name="description" content="Draw names for a Kris Kringle (Secret Santa). Share one link; everyone finds out who they're buying for.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f4efe6; --fg:#22201c; --muted:#6b645a; --panel:#fffdf8; --line:#e2d9c9;
+  --red:#9e2a2b; --green:#2f5d4a; --gold:#b8892f; --accent:#9e2a2b; --soft:#f7ece9;
+  --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#171513; --fg:#ece6dc; --muted:#a59c8f; --panel:#211e1b; --line:#38322c; --red:#e07a6f; --green:#7fbf9f; --gold:#e0b45e; --accent:#e07a6f; --soft:#2b2220; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);
+  padding:max(24px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.wrap{max-width:860px;margin:0 auto;display:grid;gap:18px}
+a{color:var(--accent)}
+.home{color:var(--muted);text-decoration:none;font-size:.9rem}
+h1{font-family:var(--display);font-size:clamp(1.9rem,6vw,2.7rem);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:1.3rem;margin:0 0 8px}
+h3{font-size:1rem;margin:14px 0 6px}
+p{margin:0 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.panel.hl{border-color:var(--accent);background:var(--soft)}
+.panel.ok{border-color:var(--green)}
+label{display:grid;gap:4px;font-weight:600;font-size:.9rem}
+input,textarea,select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+button,.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){button.primary,.btn.primary{color:#1a1310}}
+button.link{border:none;background:none;padding:2px 4px;color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.people{display:grid;gap:6px;margin:6px 0}
+.people .row input{flex:1;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 12px;font-size:.88rem;display:inline-flex;gap:4px;align-items:center}
+.err{color:var(--red);font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+tr.mine td{background:var(--soft)}
+.red{letter-spacing:.12em;color:var(--muted)}
+.tick{color:var(--green);font-weight:700}
+.wish{white-space:pre-wrap;word-break:break-word}
+.big{font-family:var(--display);font-size:1.6rem;color:var(--accent)}
+.facts{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:6px}
+.facts b{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:320px;overflow:auto}
+.log li{font-size:.88rem;border-bottom:1px dashed var(--line);padding:4px 0}
+.log time{color:var(--muted);margin-right:8px;font-variant-numeric:tabular-nums}
+.qr{background:#fff;padding:10px;border-radius:8px;display:inline-block}
+.qr img{display:block;width:180px;height:180px;image-rendering:pixelated}
+.linkbox{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;word-break:break-all}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:560px){.hide-sm{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="/">← Games</a>
+  <div id="app"><p class="muted">Loading…</p></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="qrcode.js"></script>
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const qs = new URLSearchParams(location.search);
+const EID = qs.get("e"), ADMIN = qs.get("admin"), CODE = qs.get("c");
+const app = $("#app");
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const toast = (t) => { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("on"), 2200); };
+const fmtDate = (d) => { if (!d) return ""; const [y, m, day] = d.split("-").map(Number); return new Date(y, m - 1, day).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "long", year: "numeric" }); };
+const fmtTime = (t) => new Date(t).toLocaleString("en-AU", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const gameLink = (id) => `${location.origin}/kriskringle/?e=${id}`;
+const personLink = (id, c) => `${location.origin}/kriskringle/?e=${id}&c=${c}`;
+const adminLink = (id, a) => `${location.origin}/kriskringle/?e=${id}&admin=${a}`;
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });
+  let j = {}; try { j = await r.json(); } catch {}
+  return { ok: r.ok, status: r.status, ...j };
+}
+
+/* ---------------- Create an event ---------------- */
+function renderCreate() {
+  const mine = store.get("kk-admin") || [];
+  app.innerHTML = `
+  <div class="wrap" style="gap:18px">
+    <header><h1>Kris Kringle</h1><p class="muted">Enter everyone, set the budget and date, and draw. Nobody — including you — sees the draw. You get one link to send to everyone; each person picks their name, sets a PIN and sees who they're buying for.</p></header>
+    ${mine.length ? `<div class="panel"><h2>Your events</h2>${mine.map((e) => `<p><a href="${esc(adminLink(e.id, e.admin))}">${esc(e.title)}</a> <span class="muted small">· ${esc(fmtDate(e.date))}</span></p>`).join("")}<p class="muted small">Kept on this device only.</p></div>` : ""}
+    <form class="panel" id="f" autocomplete="off">
+      <h2>The event</h2>
+      <div class="grid2">
+        <label>Name<input name="title" placeholder="Dunne family Christmas" maxlength="80"></label>
+        <label>Budget<input name="budget" placeholder="$30" maxlength="40"></label>
+        <label>Exchange date<input name="date" type="date" required></label>
+        <label>Location<input name="location" placeholder="Nan's place" maxlength="120"></label>
+      </div>
+      <h3>People <span class="muted small" style="font-weight:400">— at least 3, including yourself if you're playing</span></h3>
+      <div class="people" id="people"></div>
+      <div class="row"><button type="button" id="addp">+ Add person</button><button type="button" class="link" id="paste">Paste a list</button></div>
+      <h3>Exclusions <span class="muted small" style="font-weight:400">— optional: pairs who shouldn't draw each other, such as partners</span></h3>
+      <div class="row"><select id="exa"></select><span>&amp;</span><select id="exb"></select><button type="button" id="addx">Add</button></div>
+      <div class="chips" id="xs"></div>
+      <p class="err" id="ferr"></p>
+      <div class="row" id="fbtns"><button class="primary" type="submit">Draw names</button></div>
+    </form>
+  </div>`;
+  const people = $("#people"); let ex = [];
+  const names = () => [...people.querySelectorAll("input")].map((i) => i.value.trim());
+  const addPerson = (v = "") => {
+    const d = document.createElement("div"); d.className = "row";
+    d.innerHTML = `<input maxlength="30" placeholder="Name" value="${esc(v)}"><button type="button" class="link" aria-label="Remove">✕</button>`;
+    d.querySelector("button").onclick = () => { d.remove(); syncX(); };
+    d.querySelector("input").oninput = syncX;
+    people.append(d); return d.querySelector("input");
+  };
+  const syncX = () => {
+    const n = names();
+    ex = ex.filter(([a, b]) => n.includes(a) && n.includes(b));
+    const opts = n.filter(Boolean).map((x) => `<option>${esc(x)}</option>`).join("");
+    $("#exa").innerHTML = opts; $("#exb").innerHTML = opts;
+    if ($("#exb").options.length > 1) $("#exb").selectedIndex = 1;
+    $("#xs").innerHTML = ex.map(([a, b], k) => `<span class="chip">${esc(a)} &amp; ${esc(b)}<button type="button" class="link" data-k="${k}" aria-label="Remove">✕</button></span>`).join("");
+    $("#xs").querySelectorAll("button").forEach((b) => b.onclick = () => { ex.splice(+b.dataset.k, 1); syncX(); });
+  };
+  for (let i = 0; i < 4; i++) addPerson();
+  $("#addp").onclick = () => addPerson().focus();
+  $("#paste").onclick = () => {
+    const t = prompt("Paste names, one per line or separated by commas:"); if (!t) return;
+    const list = t.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+    people.querySelectorAll(".row").forEach((r) => { if (!r.querySelector("input").value.trim()) r.remove(); });
+    list.forEach((n) => addPerson(n)); syncX();
+  };
+  $("#addx").onclick = () => {
+    const a = $("#exa").value, b = $("#exb").value;
+    if (!a || !b || a === b) return toast("Pick two different people");
+    if (ex.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) return;
+    ex.push([a, b]); syncX();
+  };
+  syncX();
+  const submit = async (accept) => {
+    const f = $("#f"), n = names().filter(Boolean);
+    $("#ferr").textContent = "";
+    const body = { title: f.title.value, budget: f.budget.value, date: f.date.value, location: f.location.value, names: n,
+      exclusions: ex.map(([a, b]) => [n.indexOf(a), n.indexOf(b)]), accept };
+    const btn = f.querySelector("button.primary"); btn.disabled = true;
+    const r = await api("/api/kk/new", body);
+    btn.disabled = false;
+    if (r.id) {
+      const list = store.get("kk-admin") || [];
+      list.unshift({ id: r.id, admin: r.admin, title: body.title || "Kris Kringle", date: body.date });
+      store.set("kk-admin", list.slice(0, 20));
+      location.href = adminLink(r.id, r.admin) + "&new=1";
+      return;
+    }
+    $("#ferr").textContent = r.message || "Something went wrong. Try again.";
+    if (r.error === "few") {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = "Draw anyway"; b.onclick = () => { b.remove(); submit(true); };
+      $("#fbtns").append(b);
+    }
+  };
+  $("#f").onsubmit = (e) => { e.preventDefault(); $("#fbtns").querySelectorAll("button:not(.primary)").forEach((b) => b.remove()); submit(false); };
+}
+
+/* ---------------- An event ---------------- */
+let EV = null, SESSION = EID ? store.get("kk:" + EID) : null, pickIdx = -1, pickMode = "";
+async function load() {
+  const r = await api(`/api/kk/${EID}?t=${encodeURIComponent(SESSION || "")}${ADMIN ? "&admin=" + encodeURIComponent(ADMIN) : ""}${CODE ? "&c=" + encodeURIComponent(CODE) : ""}`);
+  if (!r.ok) { app.innerHTML = `<div class="panel"><h2>Event not found</h2><p>Check the link, or <a href="/kriskringle/">start a new Kris Kringle</a>.</p></div>`; return; }
+  if (SESSION && r.me < 0) { store.del("kk:" + EID); SESSION = null; }
+  EV = r; render();
+}
+async function act(body) {
+  const r = await api(`/api/kk/${EID}`, { ...body, t: SESSION, admin: ADMIN, c: CODE });
+  if (r.session) { SESSION = r.session; store.set("kk:" + EID, SESSION); }
+  if (r.event) { EV = r.event; }
+  return r;
+}
+
+function render() {
+  const e = EV, me = e.me, focus = document.activeElement?.id;
+  const wishDraft = $("#mywish")?.value;
+  app.innerHTML = `
+  <div class="wrap" style="gap:16px">
+    <header>
+      <h1>${esc(e.title)}</h1>
+      <div class="facts">
+        <div><b>Exchange</b>${esc(fmtDate(e.date))}</div>
+        ${e.budget ? `<div><b>Budget</b>${esc(e.budget)}</div>` : ""}
+        ${e.location ? `<div><b>Where</b>${esc(e.location)}</div>` : ""}
+        <div><b>First to unwrap</b>${esc(e.starter)}</div>
+      </div>
+    </header>
+    ${e.admin ? adminPanel() : ""}
+    ${e.revealed ? `<div class="panel ok"><h2>The draw is revealed</h2><p>The exchange day has passed, so everyone's Kris Kringle and wishlist is now shown below.</p></div>` : ""}
+    ${me >= 0 ? mePanel() : e.revealed ? "" : whoPanel()}
+    <div class="panel">
+      <h2>Everyone</h2>
+      <table>
+        <thead><tr><th class="hide-sm">#</th><th>Name</th><th>Buying for</th><th>Wishlist</th><th></th></tr></thead>
+        <tbody>${e.people.map((p, i) => `
+          <tr class="${i === me ? "mine" : ""}">
+            <td class="hide-sm muted">${i + 1}</td>
+            <td><b>${esc(p.name)}</b>${i === me ? ` <span class="muted small">(you)</span>` : ""}</td>
+            <td>${p.gives ? esc(p.gives) : `<span class="red" aria-label="hidden">*******</span>`}</td>
+            <td class="wish">${p.wish !== null ? (p.wish ? esc(p.wish) : `<span class="muted small">none yet</span>`) : `<span class="red" aria-label="hidden">${p.hasWish ? "*******" : ""}</span>`}</td>
+            <td>${p.claimed ? `<span class="tick" title="Has claimed their name">✓</span>` : `<span class="muted small" title="Not claimed yet">○</span>`}</td>
+          </tr>`).join("")}</tbody>
+      </table>
+      ${e.revealed ? "" : `<p class="muted small" style="margin-top:8px">✓ means that person has claimed their name. Each person sees only who they're buying for and that person's wishlist; your own wishlist is seen only by whoever is buying for you. Everything is revealed the day after the exchange.</p>`}
+    </div>
+    <div class="panel">
+      <h2>Change log</h2>
+      <p class="muted small">Every claim, wishlist update and organiser change is recorded here, visible to everyone.</p>
+      <ul class="log">${e.log.map((l) => `<li><time>${esc(fmtTime(l.at))}</time>${esc(l.text)}</li>`).join("")}</ul>
+    </div>
+    ${me < 0 && !ADMIN ? `<p class="muted small">Organising your own? <a href="/kriskringle/">Start a Kris Kringle</a>.</p>` : ""}
+  </div>`;
+  wire();
+  if (wishDraft !== undefined && $("#mywish")) $("#mywish").value = wishDraft;
+  if (focus && $("#" + focus)) $("#" + focus).focus();
+}
+
+function mePanel() {
+  const e = EV, kk = e.people[e.kk], mine = e.people[e.me];
+  return `<div class="panel hl">
+    <p class="muted" style="margin:0">Hi ${esc(mine.name)}, you're buying for</p>
+    <div class="big">${esc(kk.name)}</div>
+    <h3>${esc(kk.name)}'s wishlist</h3>
+    <p class="wish">${kk.wish ? esc(kk.wish) : `<span class="muted">Nothing yet. Check back later.</span>`}</p>
+    <h3>Your wishlist</h3>
+    <p class="muted small">Only you and the person buying for you can see this.</p>
+    <textarea id="mywish" maxlength="1000" placeholder="Ideas, sizes, things to avoid…">${esc(mine.wish || "")}</textarea>
+    <div class="row" style="margin-top:8px"><button class="primary" id="savewish">Save wishlist</button><button class="link" id="logout">Not ${esc(mine.name)}? Sign out</button></div>
+  </div>`;
+}
+
+function whoPanel() {
+  const e = EV;
+  if (pickIdx === -1 && e.invite >= 0) pickIdx = e.invite;
+  const p = e.people[pickIdx];
+  let inner;
+  if (!p) {
+    inner = `<p>Tap your name. To claim it the first time, use the personal link the organiser sent you; after that you can sign in here with your PIN on any device.</p><div class="chips">${e.people.map((q, i) => `<button class="pick" data-i="${i}">${esc(q.name)}${q.claimed ? " ✓" : ""}</button>`).join("")}</div>
+      <p class="muted small">Names with ✓ have been claimed. If it's yours, tap it to sign in with your PIN. Can't see your name? It may be listed differently (say "Uncle Bob" for Robert); if it's not there at all, ask the organiser.</p>`;
+  } else if (!p.claimed && pickIdx !== e.invite) {
+    inner = `<p><b>${esc(p.name)}</b> hasn't been claimed yet. To claim your name, open the <b>personal link</b> the organiser sent you. It only works for you. If you haven't had one, ask the organiser.</p>
+      <div class="row"><button class="link" id="back">Back</button></div>`;
+  } else if (!p.claimed) {
+    inner = `<p>You're <b>${esc(p.name)}</b>. Choose a 4-digit PIN. You'll need it to see your Kris Kringle on another device.</p>
+      <div class="grid2"><label>PIN<input id="pin" inputmode="numeric" pattern="\\d{4}" maxlength="4" autocomplete="off"></label><label>PIN again<input id="pin2" inputmode="numeric" maxlength="4" autocomplete="off"></label></div>
+      <p class="err" id="perr"></p>
+      <div class="row"><button class="primary" id="claim">Show my Kris Kringle</button><button class="link" id="back">Not me</button></div>`;
+  } else {
+    inner = `<p><b>${esc(p.name)}</b> has been claimed. If that's you, enter your PIN.</p>
+      <label style="max-width:200px">PIN<input id="pin" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+      <p class="err" id="perr"></p>
+      <div class="row"><button class="primary" id="login">Sign in</button><button class="link" id="back">Back</button></div>
+      <p class="muted small" style="margin-top:10px">Didn't claim this yourself? <button class="link" id="report">Tell the organiser</button>. Forgot your PIN? The organiser can reset it.</p>`;
+  }
+  return `<div class="panel hl"><h2>Who are you?</h2>${inner}</div>`;
+}
+
+function adminPanel() {
+  const e = EV, a = e.admin, link = gameLink(e.id), alink = adminLink(e.id, ADMIN);
+  const fresh = qs.get("new") === "1";
+  const claimed = e.people.filter((p) => p.claimed).length;
+  const text = `You're in the ${e.title} Kris Kringle! Open this link, tap your name and set a PIN to see who you're buying for:`;
+  return `<div class="panel ${fresh ? "hl" : ""}">
+    <h2>${fresh ? "Names drawn. Now send everyone their link" : "Organiser"}</h2>
+    <p>Each person gets their own <b>personal link</b>, which can claim only their name. Send each one privately, however suits that person: text, WhatsApp, Messenger, Instagram, Discord, email…</p>
+    <table style="margin:6px 0 12px"><tbody>${e.people.map((p, i) => `<tr><td>${p.claimed ? `<span class="tick">✓</span>` : "○"} <b>${esc(p.name)}</b></td><td style="text-align:right">${p.claimed ? `<span class="muted small">claimed</span>` : `<button class="primary pshare" data-i="${i}">Send…</button> <button class="pcopy" data-i="${i}">Copy</button>`}</td></tr>`).join("")}</tbody></table>
+    <h3>Group link</h3>
+    <p class="muted small">Optional: anyone can view the table with this, and people who've already claimed can sign in with their PIN. It can't claim a name.</p>
+    <div class="linkbox">${esc(link)}</div>
+    <div class="row" style="margin-top:8px">
+      <button id="share">Share…</button>
+      <button id="copy">Copy link</button>
+      <a class="btn hidden" href="sms:?&body=${encodeURIComponent(text + " " + link)}">SMS</a>
+      <a class="btn hidden" href="mailto:?subject=${encodeURIComponent(e.title + " — Kris Kringle")}&body=${encodeURIComponent(text + "\n\n" + link)}">Email</a>
+      <button id="qrbtn">QR code</button>
+    </div>
+    <div id="qrbox" class="hidden" style="margin-top:10px"></div>
+    <h3>Your organiser link</h3>
+    <p class="muted small">Keep this one to yourself: it's how you get back to this panel. Bookmark it or send it to yourself. It doesn't show the draw.</p>
+    <div class="linkbox">${esc(alink)}</div>
+    <div class="row" style="margin-top:8px"><button id="sharea">Send to myself…</button><button id="copya">Copy</button></div>
+    <h3>Who has claimed their name (${claimed} of ${e.people.length})</h3>
+    ${a.flags.length ? `<div class="panel hl" style="padding:10px 12px;margin:6px 0"><b>Needs a look</b>${a.flags.map((f) => `<p class="small" style="margin:4px 0">${esc(fmtTime(f.at))}: ${esc(f.text)}</p>`).join("")}<button class="link" id="dismiss">Dismiss</button></div>` : ""}
+    <div class="chips">${e.people.map((p, i) => `<span class="chip">${p.claimed ? `<span class="tick">✓</span>` : "○"} ${esc(p.name)}${p.claimed ? `<button class="link reset" data-i="${i}" title="Reset claim and PIN">reset</button>` : ""}<button class="link rename" data-i="${i}" title="Rename">✎</button></span>`).join("")}</div>
+    <p class="muted small">✎ renames someone (the draw doesn't change). Reset clears a claim and PIN (for a forgotten PIN or the wrong person claiming), so the name can be claimed again. Resets are logged.</p>
+    ${a.exclusions.length ? `<h3>Exclusions</h3><p class="small">${a.exclusions.map(([x, y]) => esc(x) + " &amp; " + esc(y)).join("; ")}</p>` : ""}
+    <details style="margin-top:10px"><summary><b>Edit event details</b></summary>
+      <div class="grid2" style="margin-top:8px">
+        <label>Name<input id="ed-title" value="${esc(e.title)}" maxlength="80"></label>
+        <label>Budget<input id="ed-budget" value="${esc(e.budget)}" maxlength="40"></label>
+        <label>Exchange date<input id="ed-date" type="date" value="${esc(e.date)}"></label>
+        <label>Location<input id="ed-location" value="${esc(e.location)}" maxlength="120"></label>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="primary" id="saveed">Save details</button></div>
+    </details>
+  </div>`;
+}
+
+function share(url, title, text) {
+  if (navigator.share) navigator.share({ title, text, url }).catch(() => {});
+  else copy(url);
+}
+function copy(t) { navigator.clipboard?.writeText(t).then(() => toast("Link copied"), () => prompt("Copy this link:", t)); }
+
+function wire() {
+  const e = EV;
+  const on = (id, fn) => { const el = $("#" + id); if (el) el.onclick = fn; };
+  document.querySelectorAll(".pick").forEach((b) => b.onclick = () => { pickIdx = +b.dataset.i; pickMode = ""; render(); $("#pin")?.focus(); });
+  on("back", () => { pickIdx = -2; render(); });
+  on("claim", async () => {
+    const pin = $("#pin").value, pin2 = $("#pin2").value;
+    if (!/^\d{4}$/.test(pin)) return $("#perr").textContent = "The PIN is 4 digits.";
+    if (pin !== pin2) return $("#perr").textContent = "The two PINs don't match.";
+    const r = await act({ action: "claim", person: pickIdx, pin });
+    if (r.session) { pickIdx = -2; render(); window.scrollTo(0, 0); }
+    else { if (r.event) render(); $("#perr") && ($("#perr").textContent = r.message || "Couldn't claim."); }
+  });
+  on("login", async () => {
+    const r = await act({ action: "login", person: pickIdx, pin: $("#pin").value });
+    if (r.session) { pickIdx = -2; render(); } else $("#perr").textContent = r.message || "Couldn't sign in.";
+  });
+  on("report", async () => { await act({ action: "report", person: pickIdx }); pickIdx = -2; render(); toast("The organiser has been told"); });
+  on("savewish", async () => { const r = await act({ action: "wish", wish: $("#mywish").value }); if (r.ok !== false) { render(); toast("Wishlist saved"); } });
+  on("logout", async () => { await act({ action: "logout" }); store.del("kk:" + EID); SESSION = null; load(); });
+  if (!e.admin) return;
+  const link = gameLink(e.id), alink = adminLink(e.id, ADMIN);
+  on("share", () => share(link, e.title + " — Kris Kringle", `You're in the ${e.title} Kris Kringle! Tap your name and set a PIN to see who you're buying for.`));
+  on("copy", () => copy(link));
+  on("sharea", () => share(alink, "Organiser link: " + e.title, "My organiser link for the Kris Kringle (keep private)."));
+  on("copya", () => copy(alink));
+  const msg = (p) => `Hi ${p.name}! You're in the ${e.title} Kris Kringle. This link is just for you. Open it and set a PIN to see who you're buying for:`;
+  document.querySelectorAll(".pshare").forEach((b) => b.onclick = () => { const p = e.people[+b.dataset.i]; share(personLink(e.id, e.admin.codes[+b.dataset.i]), e.title + " — Kris Kringle", msg(p)); });
+  document.querySelectorAll(".pcopy").forEach((b) => b.onclick = () => copy(personLink(e.id, e.admin.codes[+b.dataset.i])));
+  on("qrbtn", () => {
+    const box = $("#qrbox"); box.classList.toggle("hidden");
+    if (!box.innerHTML) { const q = qrcode(0, "M"); q.addData(link); q.make(); box.innerHTML = `<div class="qr">${q.createImgTag(6, 8)}</div><p class="muted small">Point a phone camera at this to open the game link.</p>`; }
+  });
+  on("dismiss", async () => { await act({ action: "admin-dismiss" }); render(); });
+  document.querySelectorAll(".reset").forEach((b) => b.onclick = async () => {
+    const p = e.people[+b.dataset.i];
+    if (!confirm(`Reset ${p.name}'s claim and PIN? ${p.name} gets a new personal link (the old one stops working), which you'll need to send them.`)) return;
+    await act({ action: "admin-reset", person: +b.dataset.i }); render(); toast("Reset");
+  });
+  document.querySelectorAll(".rename").forEach((b) => b.onclick = async () => {
+    const p = e.people[+b.dataset.i], n = prompt(`Rename ${p.name} to:`, p.name);
+    if (!n || n.trim() === p.name) return;
+    const r = await act({ action: "admin-rename", person: +b.dataset.i, name: n });
+    if (r.event && r.ok !== false) { render(); toast("Renamed"); } else toast(r.message || "Couldn't rename");
+  });
+  on("saveed", async () => {
+    const r = await act({ action: "admin-details", title: $("#ed-title").value, budget: $("#ed-budget").value, date: $("#ed-date").value, location: $("#ed-location").value });
+    if (r.event) { render(); toast("Details saved"); } else toast(r.message || "Couldn't save");
+  });
+}
+
+if (!EID) renderCreate();
+else {
+  load();
+  // keep the table, ticks and log fresh while the page is open (pauses while someone is typing)
+  setInterval(() => { if (document.visibilityState === "visible" && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) load(); }, 20000);
+}
+</script>
+</body>
+</html>

@@ -14,16 +14,22 @@
 // GET  /api/kk/<id>?t=<session>    the event as this viewer may see it (&admin=<token> for the organiser)
 // POST /api/kk/<id>                {action, ...} — claim, login, wish, admin-details, admin-reset
 
-const ID = /^[a-z0-9]{10}$/;
+const ID = /^[a-z0-9]{5,40}$/;
 const enc = new TextEncoder();
 
 export async function kkRoute(req, env, url) {
   if (url.pathname === "/api/kk/new" && req.method === "POST") {
     let b;
     try { b = await req.json(); } catch { return bad("Bad request"); }
-    const id = rand(10), admin = rand(24);
-    const stub = env.EVENTS.get(env.EVENTS.idFromName(id));
-    return stub.fetch(new Request("https://kk/create", { method: "POST", body: JSON.stringify({ ...b, id, admin }) }));
+    // readable event id: the event name in lowercase letters and digits, plus 4 random digits (jonesfamily1001)
+    const slug = String(b.title || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "").slice(0, 24) || "kriskringle";
+    for (let tries = 0; tries < 8; tries++) {
+      const id = slug + String(crypto.getRandomValues(new Uint16Array(1))[0] % 9000 + 1000), admin = rand(24);
+      const stub = env.EVENTS.get(env.EVENTS.idFromName(id));
+      const r = await stub.fetch(new Request("https://kk/create", { method: "POST", body: JSON.stringify({ ...b, id, admin }) }));
+      if (r.status !== 400 || !(await r.clone().text()).includes("Try again")) return r;
+    }
+    return bad("Couldn't create the event. Try again.", 503);
   }
   const m = url.pathname.match(/^\/api\/kk\/([a-z0-9]+)$/);
   if (m) {

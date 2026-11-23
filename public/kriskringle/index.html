@@ -81,7 +81,7 @@ tr.mine td{background:var(--soft)}
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const qs = new URLSearchParams(location.search);
-const EID = qs.get("e"), ADMIN = qs.get("admin"), CODE = qs.get("c");
+const EID = qs.get("event") || qs.get("e"), ADMIN = qs.get("admin"), CODE = qs.get("code") || qs.get("c");
 const app = $("#app");
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -91,9 +91,9 @@ const store = {
 const toast = (t) => { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("on"), 2200); };
 const fmtDate = (d) => { if (!d) return ""; const [y, m, day] = d.split("-").map(Number); return new Date(y, m - 1, day).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "long", year: "numeric" }); };
 const fmtTime = (t) => new Date(t).toLocaleString("en-AU", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
-const gameLink = (id) => `${location.origin}/kriskringle/?e=${id}`;
-const personLink = (id, c) => `${location.origin}/kriskringle/?e=${id}&c=${c}`;
-const adminLink = (id, a) => `${location.origin}/kriskringle/?e=${id}&admin=${a}`;
+const gameLink = (id) => `${location.origin}/kriskringle/?event=${id}`;
+const personLink = (id, c) => `${location.origin}/kriskringle/?event=${id}&code=${c}`;
+const adminLink = (id, a) => `${location.origin}/kriskringle/?event=${id}&admin=${a}`;
 
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });

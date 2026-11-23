@@ -37,7 +37,7 @@ export async function kkRoute(req, env, url) {
     }
     return bad("Couldn't create the event. Try again.", 503);
   }
-  const m = url.pathname.match(/^\/api\/kk\/([a-z0-9]+)$/);
+  const m = url.pathname.match(/^\/api\/kk\/([a-z0-9-]+)$/);
   if (m) {
     if (!ID.test(m[1])) return bad("No such event", 404);
     const stub = env.EVENTS.get(env.EVENTS.idFromName(m[1]));
